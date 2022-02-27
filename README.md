@@ -12,8 +12,10 @@ Async/Await is the future of asynchronous coding (not promises, futures, or Rx).
 Layer catch behavior for later:
     - Send to analytics
     - Log
+Recovery or plan B
 
 ## Future directions:
+How would this be used in each?
 
 *Cancel*
 

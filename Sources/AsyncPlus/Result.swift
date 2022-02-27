@@ -1,6 +1,6 @@
 import Foundation
 
-/// An internal enum for representing results; the built-in result type has a "Failure" generic type which is unused for our purposes.
+/// An internal enum for representing results; constrained further for compile-time optimization
 enum Result<Success> {
     
     case success(Success)
@@ -9,20 +9,29 @@ enum Result<Success> {
     /// Converts to a result of Any type
     func asAny() -> Result<Any> {
         switch self {
-        case Result<Success>.success(let v):
-            return Result<Any>.success(v as Any)
-        case Result<Success>.failure(let error):
-            return Result<Any>.failure(error)
+        case .success(let value):
+            return .success(value as Any)
+        case .failure(let error):
+            return .failure(error)
         }
     }
     
     /// Force casts to a result of the specified type
     func forceSpecializeAs<T>(type: T.Type) -> Result<T> {
         switch self {
-        case Result<Success>.success(let v):
-            return Result<T>.success(v as! T)
-        case Result<Success>.failure(let error):
-            return Result<T>.failure(error)
+        case .success(let value):
+            return .success(value as! T)
+        case .failure(let error):
+            return .failure(error)
+        }
+    }
+    
+    func asSwiftResult() -> Swift.Result<Success, Error> {
+        switch self {
+        case .success(let value):
+            return .success(value)
+        case .failure(let error):
+            return .failure(error)
         }
     }
 }
