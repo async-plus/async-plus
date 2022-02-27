@@ -3,49 +3,100 @@ import AppKit
 
 let backgroundSyncQueue = DispatchQueue(label: "serial-queue")
 
-func attempt<T>(_ body: () -> T) -> Attempt<T> {
-    return Attempt(body)
+enum Future<T> {
+    case pending
+    case resolved(T)
 }
 
-func attempt<T>(_ body: () throws -> T) -> AttemptThrows<T> {
-    return AttemptThrows(body)
+func attempt<T>(_ body: () -> T) -> AttemptNonFailableInstant<T> {
+    return AttemptNonFailableInstant(body)
 }
 
-func attempt<T>(_ body: @escaping () async -> T) -> AttemptAsync<T> {
-    return AttemptAsync(body)
+func attempt<T>(_ body: () throws -> T) -> AttemptFailableInstant<T> {
+    return AttemptFailableInstant(body)
 }
 
-func attempt<T>(_ body: @escaping () async throws -> T) -> AttemptAsyncThrows<T> {
-    return AttemptAsyncThrows(body)
+func attempt<T>(_ body: @escaping () async -> T) -> AttemptNonFailableAsync<T> {
+    return AttemptNonFailableAsync(body)
 }
 
-protocol Promise {
+func attempt<T>(_ body: @escaping () async throws -> T) -> AttemptFailableAsync<T> {
+    return AttemptFailableAsync(body)
+}
+
+protocol Node {
     associatedtype T
-    associatedtype Fails
-    associatedtype When
+    associatedtype Fails: ThrowsFlag
+    associatedtype When: WhenFlag
 }
 
-class Attempt<T>: Promise {
+protocol NodeNonFailable: Node where Fails == Never {}
+protocol NodeFailable: Node where Fails == Sometimes {}
+protocol NodeInstant: Node where When == Instant {}
+protocol NodeAsync: Node where When == Async {}
+
+protocol NodeNonFailableInstant: NodeNonFailable, NodeInstant {
+    var result: T { get }
+}
+
+protocol NodeFailableInstant: NodeFailable, NodeInstant {
+    var result: Result<T> { get }
+}
+
+protocol NodeNonFailableAsync: NodeNonFailable, NodeAsync {
+    var result: Future<T> { get }
+}
+
+protocol NodeFailableAsync: NodeFailable, NodeAsync {
+    var result: Future<Result<T>> { get }
+}
+
+// RecoverNonFailableInstant
+extension NodeFailableInstant {
     
-    typealias Fails = Never
-    typealias When = Instant
+    func recover(_ body: (Error) -> T) -> RecoverNonFailableInstant<T> {
+        return RecoverNonFailableInstant(body, input: result)
+    }
+
+    func recover(_ body: (Error) throws -> T) -> RecoverFailableInstant<T> {
+        return RecoverFailableInstant(body, input: result)
+    }
+}
+
+extension NodeFailableAsync {
     
-    // Result is raw because Never, Instant
+    // These recover functions are async because the current result is already async.
+    func recover(_ body: @escaping (Error) -> T) -> RecoverNonFailableAsync<T> {
+        return RecoverNonFailableAsync(body)
+    }
+    
+    func recover(_ body: @escaping (Error) throws -> T) -> RecoverFailableAsync<T> {
+        return RecoverFailableAsync(body)
+    }
+}
+
+extension NodeFailable {
+    
+    func recover(_ body: @escaping (Error) async -> T) -> RecoverNonFailableAsync<T> {
+        return RecoverNonFailableAsync(body)
+    }
+    
+    func recover(_ body: @escaping (Error) async throws -> T) -> RecoverFailableAsync<T> {
+        return RecoverFailableAsync(body)
+    }
+}
+
+class AttemptNonFailableInstant<T>: NodeNonFailableInstant {
+    
     var result: T
     
     init(_ body: () -> T) {
         result = body()
     }
-    
-    // no need for recover because Fails = Never
 }
 
-class AttemptThrows<T>: Promise {
+class AttemptFailableInstant<T>: NodeFailableInstant {
     
-    typealias Fails = Sometimes
-    typealias When = Instant
-    
-    // Result is result because Sometimes, Instant
     var result: Result<T>
     
     init(_ body: () throws -> T) {
@@ -55,36 +106,9 @@ class AttemptThrows<T>: Promise {
             result = .failure(error)
         }
     }
-    
-    // Implementing recover because Fails = Somtimes
-    func recover(_ body: @escaping (Error) async -> T) -> RecoverAsync<T> {
-        return RecoverAsync(body)
-    }
-    
-    func recover(_ body: @escaping (Error) async throws -> T) -> RecoverAsyncThrows<T> {
-        return RecoverAsyncThrows(body)
-    }
-    
-    // Non-escaping because Result = Instant
-    func recover(_ body: (Error) -> T) -> Recover<T> {
-        return Recover(body, input: result)
-    }
-    
-    // Non-escaping because Result = Instant
-    func recover(_ body: (Error) throws -> T) -> RecoverThrows<T> {
-        return RecoverThrows(body, input: result)
-    }
 }
 
-enum Future<T> {
-    case pending
-    case resolved(T)
-}
-
-class AttemptAsync<T>: Promise {
-    
-    typealias Fails = Never
-    typealias When = Async
+class AttemptNonFailableAsync<T>: NodeNonFailableAsync {
     
     // Result is a raw future because Never Async
     var result: Future<T> = .pending
@@ -95,15 +119,10 @@ class AttemptAsync<T>: Promise {
             // TODO: execute all other items in the chain
         }
     }
-    
-    // Not implementing recover because Fails = never
 }
 
 
-class AttemptAsyncThrows<T>: Promise {
-    
-    typealias Fails = Sometimes
-    typealias When = Async
+class AttemptFailableAsync<T>: NodeFailableAsync {
     
     // Result is a result future because Sometimes Async
     var result: Future<Result<T>> = .pending
@@ -118,31 +137,9 @@ class AttemptAsyncThrows<T>: Promise {
             // TODO: Do next in chain
         }
     }
-    
-    // Implementing recover because Fails = Somtimes
-    // We return a RecoverAsync because
-    func recover(_ body: @escaping (Error) -> T) -> RecoverAsync<T> {
-        // However
-        return RecoverAsync(body)
-    }
-    
-    func recover(_ body: @escaping (Error) throws -> T) -> RecoverAsyncThrows<T> {
-        return RecoverAsyncThrows(body)
-    }
-    
-    func recover(_ body: @escaping (Error) async -> T) -> RecoverAsync<T> {
-        return RecoverAsync(body)
-    }
-    
-    func recover(_ body: @escaping (Error) async throws -> T) -> RecoverAsyncThrows<T> {
-        return RecoverAsyncThrows(body)
-    }
 }
 
-class Recover<T>: Promise {
-    
-    typealias Fails = Never
-    typealias When = Instant
+class RecoverNonFailableInstant<T>: NodeNonFailableInstant {
     
     // Result is a raw because Never Instant
     var result: T
@@ -157,10 +154,7 @@ class Recover<T>: Promise {
     }
 }
 
-class RecoverThrows<T>: Promise {
-    
-    typealias Fails = Sometimes
-    typealias When = Instant
+class RecoverFailableInstant<T>: NodeFailableInstant {
     
     // Result is a result raw because Sometimes Instant
     var result: Result<T>
@@ -180,10 +174,7 @@ class RecoverThrows<T>: Promise {
     }
 }
 
-class RecoverAsync<T>: Promise {
-    
-    typealias Fails = Never
-    typealias When = Async
+class RecoverNonFailableAsync<T>: NodeNonFailableAsync {
     
     // Result is a raw future because Never Async
     var result: Future<T> = .pending
@@ -194,10 +185,7 @@ class RecoverAsync<T>: Promise {
     }
 }
 
-class RecoverAsyncThrows<T>: Promise {
-    
-    typealias Fails = Sometimes
-    typealias When = Async
+class RecoverFailableAsync<T>: NodeFailableAsync {
     
     // Result is a result future because Sometimes Async
     var result: Future<Result<T>> = .pending

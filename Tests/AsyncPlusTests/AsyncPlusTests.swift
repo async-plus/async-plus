@@ -35,45 +35,19 @@ final class AsyncPlusTests: XCTestCase {
     
     func testChaining() throws {
         
-//        let two: Int = attempt {
-//            print("Hello world")
-//            throw ErrorIndicator.finallyHasRun
-//        }.recover {
-//            err in
-//            return 2
-//        }
-    }
-    
-    func testFlatMap() throws {
         
-        let expectation = expectation(description: "Wait for 5 seconds")
-        
-        Task.init {
-            let promise = Promise<Int> {
-                print("Starting task one")
-                try! await Task.sleep(nanoseconds: 2 * NSEC_PER_SEC)
-                print("I have slept for 2 seconds")
-                return 2
-            }.flatMap {
-                _ in
-                return Promise<Int> {
-                    print("Starting task two")
-                    try! await Task.sleep(nanoseconds: 3 * NSEC_PER_SEC)
-                    print("I have slept for 5 seconds total")
-                    
-                    return 3
-                }
-            }
-            
-            
-            for try await i in promise {
-                print("got value \(i)")
-            }
-            
-            expectation.fulfill()
+        attempt {
+            print("Start counting")
+            try await Task.sleep(nanoseconds: 1 * NSEC_PER_SEC)
+            throw ErrorIndicator.finallyHasRun
+        }.recover {
+            err in
+            try await Task.sleep(nanoseconds: 2 * NSEC_PER_SEC)
+            // End counting
+        }.recover {
+            err in
+            try! await Task.sleep(nanoseconds: 1 * NSEC_PER_SEC)
         }
-        
-        waitForExpectations(timeout: 16, handler: nil)
-        
     }
+
 }
