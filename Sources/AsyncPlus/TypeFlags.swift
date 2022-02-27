@@ -1,28 +1,29 @@
 import Foundation
 
+/// Indicates whether failure is an option
+class FailsFlagBase {
+    
+}
+
+final class Never: FailsFlagBase {
+    
+}
+
+final class Sometimes: FailsFlagBase {
+    
+}
+
 
 /// Indicates whether results are async or instantaneous
-class TemporalFlagBase {
+class WhenFlagBase {
     
 }
 
-final class Instant: TemporalFlagBase {
+final class Instant: WhenFlagBase {
     
 }
 
-final class Async: TemporalFlagBase {
+final class Async: WhenFlagBase {
     
 }
 
-/// Indicates whether failure is an option
-class FailureFlagBase {
-    
-}
-
-final class Never: FailureFlagBase {
-    
-}
-
-final class Sometimes: FailureFlagBase {
-    
-}
