@@ -1,30 +1,6 @@
 import XCTest
 @testable import AsyncPlus
 
-struct Promise<T>: AsyncSequence, AsyncIteratorProtocol {
-    typealias Element = T
-    var hasGivenValue: Bool = false
-    let body: () async throws -> T
-    
-    init(body: @escaping () async throws -> T) {
-        self.body = body
-    }
-    
-    mutating func next() async throws -> Element? {
-        
-        defer { hasGivenValue = true }
-        if hasGivenValue {
-            return nil
-        }
-        
-        return try await body()
-    }
-
-    func makeAsyncIterator() -> Promise<T> {
-        self
-    }
-}
-
 final class AsyncPlusTests: XCTestCase {
     func testExample() throws {
         // This is an example of a functional test case.
@@ -85,5 +61,4 @@ final class AsyncPlusTests: XCTestCase {
         
         waitForExpectations(timeout: 4.1, handler: nil)
     }
-
 }

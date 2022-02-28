@@ -10,10 +10,6 @@ attempt {
     try await anotherCall(x)
 }
 
-throwing, non-async context:
-
-TODO: Are these type "flags" necessary? Why not just make the base types conform to the stage flag?
-
 ## Migrating from PromiseKit
 `firstly` -> `attempt`
 `then` -> `then` and `thenAttempt` (but it doesn't always need to return a value)
@@ -34,6 +30,4 @@ We add these new operations:
 `.asyncOptional()`: Async call that returns an optional value of the result.
 `.asyncResult()`: Async call that returns a Result
 `.asyncThrows()`: Async call that returns the value or throws.
-`.promise`: Can call if you have not called `done`.
-`.future`: returns a Combine Future for the operation
 
