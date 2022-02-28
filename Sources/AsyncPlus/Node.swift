@@ -73,25 +73,8 @@ extension NodeFailableAsync {
     }
 }
 
-final class GenericNodeNonFailableInstant<T, Stage> {
-    let value: T
-    
-    init(_ value: T) {
-        self.value = value
-    }
-}
-//
-//final class GenericNodeFailableInstant<T, Stage> {
-//    let value: T
-//    
-//    init(_ value: T) {
-//        self.value = value
-//    }
-//}
+final class GenericNodeNonFailableInstant<T, Stage: StageFlag>: NodeNonFailableInstant {
 
-final class ChainableValue<T>: NodeNonFailableInstant {
-    typealias Stage = Thenable
-    
     let value: T
     
     init(_ value: T) {
@@ -99,8 +82,7 @@ final class ChainableValue<T>: NodeNonFailableInstant {
     }
 }
 
-final class ChainableResult<T>: NodeFailableInstant {
-    typealias Stage = Thenable
+final class GenericNodeFailableInstant<T, Stage: StageFlag>: NodeFailableInstant {
     
     let result: SResult<T>
     
@@ -109,8 +91,7 @@ final class ChainableResult<T>: NodeFailableInstant {
     }
 }
 
-final class Guarantee<T>: NodeNonFailableAsync {
-    typealias Stage = Thenable
+final class GenericNodeNonFailableAsync<T, Stage: StageFlag>: NodeNonFailableAsync {
     
     let task: NonFailableTask<T>
     
@@ -119,38 +100,7 @@ final class Guarantee<T>: NodeNonFailableAsync {
     }
 }
 
-final class Promise<T>: NodeFailableAsync {
-    typealias Stage = Thenable
-    
-    let task: FailableTask<T>
-    
-    init(_ task: FailableTask<T>) {
-        self.task = task
-    }
-}
-
-final class PartiallyCaughtResult<T>: NodeFailableInstant {
-    typealias Stage = PartiallyCaught
-    
-    let result: SResult<T>
-
-    init(_ result: SResult<T>) {
-        self.result = result
-    }
-}
-
-final class CaughtResult<T>: NodeFailableInstant {
-    typealias Stage = CompletelyCaught
-    
-    let result: SResult<T>
-
-    init(_ result: SResult<T>) {
-        self.result = result
-    }
-}
-
-final class PartiallyCaughtPromise<T>: NodeFailableAsync {
-    typealias Stage = PartiallyCaught
+final class GenericNodeFailableAsync<T, Stage: StageFlag>: NodeFailableAsync {
     
     let task: FailableTask<T>
 
@@ -159,52 +109,18 @@ final class PartiallyCaughtPromise<T>: NodeFailableAsync {
     }
 }
 
-final class CaughtPromise<T>: NodeFailableAsync {
-    typealias Stage = CompletelyCaught
-    
-    let task: FailableTask<T>
+typealias ChainableValue<T> = GenericNodeNonFailableInstant<T, Thenable>
+typealias ChainableResult<T> = GenericNodeFailableInstant<T, Thenable>
+typealias Guarantee<T> = GenericNodeNonFailableAsync<T, Thenable>
+typealias Promise<T> = GenericNodeFailableAsync<T, Thenable>
 
-    init(_ task: FailableTask<T>) {
-        self.task = task
-    }
-}
+typealias PartiallyCaughtResult<T> = GenericNodeFailableInstant<T, PartiallyCaught>
+typealias CaughtResult<T> = GenericNodeFailableInstant<T, CompletelyCaught>
+typealias PartiallyCaughtPromise<T> = GenericNodeFailableAsync<T, PartiallyCaught>
+typealias CaughtPromise<T> = GenericNodeFailableAsync<T, CompletelyCaught>
 
-final class FinalizedValue<T>: NodeNonFailableInstant {
-    typealias Stage = Finalized
-    
-    let value: T
-    
-    init(_ value: T) {
-        self.value = value
-    }
-}
+typealias FinalizedValue<T> = GenericNodeNonFailableInstant<T, Finalized>
+typealias FinalizedResult<T> = GenericNodeFailableInstant<T, Finalized>
+typealias FinalizedGuarantee<T> = GenericNodeNonFailableAsync<T, Finalized>
+typealias FinalizedPromise<T> = GenericNodeFailableAsync<T, Finalized>
 
-final class FinalizedResult<T>: NodeFailableInstant {
-    typealias Stage = Finalized
-    
-    let result: SResult<T>
-
-    init(_ result: SResult<T>) {
-        self.result = result
-    }
-}
-
-final class FinalizedGuarantee<T>: NodeNonFailableAsync {
-    typealias Stage = Finalized
-    
-    let task: NonFailableTask<T>
-    
-    init(_ task: NonFailableTask<T>) {
-        self.task = task
-    }
-}
-
-final class FinalizedPromise<T>: NodeFailableAsync {
-    typealias Stage = Finalized
-    
-    let task: FailableTask<T>
-
-    init(_ task: FailableTask<T>) {
-        self.task = task
-    }
-}
