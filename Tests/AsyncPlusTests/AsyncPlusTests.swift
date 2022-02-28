@@ -2,12 +2,6 @@ import XCTest
 @testable import AsyncPlus
 
 final class AsyncPlusTests: XCTestCase {
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct
-        // results.
-        XCTAssertEqual("Hello, World!", "Hello, World!")
-    }
     
     func testInstant1() throws {
         
@@ -16,17 +10,17 @@ final class AsyncPlusTests: XCTestCase {
         attempt {
             () -> Int in
             print("Start counting")
-            try await Task.sleep(nanoseconds: 1 * NSEC_PER_SEC)
-            throw ErrorIndicator.finallyHasRun
+            try await mockSleepThrowing(seconds: 1)
+            throw MockError.stackOverflow
         }.recover {
             err in
-            try! await Task.sleep(nanoseconds: 1 * NSEC_PER_SEC)
+            await mockSleep(seconds: 1)
             print("We recovered")
             expectation.fulfill()
             return 2
         }.catch {
             err in
-            try! await Task.sleep(nanoseconds: 1 * NSEC_PER_SEC)
+            try! await mockSleepThrowing(seconds: 1)
             print("Error \(err)")
         }
         
@@ -40,21 +34,21 @@ final class AsyncPlusTests: XCTestCase {
         attempt {
             () -> Int in
             print("Start counting")
-            try! await Task.sleep(nanoseconds: 1 * NSEC_PER_SEC)
-            throw ErrorIndicator.finallyHasRun
+            await mockSleep(seconds: 1)
+            throw MockError.stackOverflow
         }.recover {
             err -> Int in
             print("We recovered")
-            try! await Task.sleep(nanoseconds: 1 * NSEC_PER_SEC)
-            throw ErrorIndicator.uninitialized
+            try! await mockSleepThrowing(seconds: 1)
+            throw MockError.noInternet
         }.catch {
             err in
             print("Error \(err)")
-            try await Task.sleep(nanoseconds: 1 * NSEC_PER_SEC)
-            throw ErrorIndicator.hasBeenCaught
+            try await mockSleepThrowing(seconds: 1)
+            throw MockError.notImplemented
         }.catch {
             err in
-            XCTAssert(err as! ErrorIndicator == ErrorIndicator.hasBeenCaught)
+            XCTAssert(err as! MockError == MockError.notImplemented)
             try! await Task.sleep(nanoseconds: 1 * NSEC_PER_SEC)
             expectation.fulfill()
         }
