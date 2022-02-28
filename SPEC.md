@@ -15,7 +15,7 @@ throwing, non-async context:
 
 ## Migrating from PromiseKit
 `firstly` -> `attempt`
-`then` -> `then` (but it doesn't always need to return a value)
+`then` -> `then` and `thenAttempt` (but it doesn't always need to return a value)
 `map` -> no need? But on the other hand if we are using $0 and wanting to not type annotate then you need it. However it could be the same as `then` just with a different overload for non-async.
 `compactMap` -> extension for optional "throwing if nil"
 `recover` -> `recover`. Needed.

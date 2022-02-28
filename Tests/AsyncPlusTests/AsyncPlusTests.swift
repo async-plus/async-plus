@@ -44,9 +44,9 @@ final class AsyncPlusTests: XCTestCase {
             err in
             try await Task.sleep(nanoseconds: 2 * NSEC_PER_SEC)
             // End counting
-        }.recover {
+        }.catch {
             err in
-            try! await Task.sleep(nanoseconds: 1 * NSEC_PER_SEC)
+            throw ErrorIndicator.finallyHasRun
         }
     }
 
