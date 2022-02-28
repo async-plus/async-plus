@@ -12,6 +12,7 @@ attempt {
 
 throwing, non-async context:
 
+TODO: Are these type "flags" necessary? Why not just make the base types conform to the stage flag?
 
 ## Migrating from PromiseKit
 `firstly` -> `attempt`

@@ -1,7 +1,7 @@
 import Foundation
 
 
-extension NodeNonFailableInstant where Stage == ResultsStage {
+extension NodeNonFailableInstant where Stage == Thenable {
     
     func then<U>(_ body: (T) -> U) -> ChainableValue<U> {
         return ChainableValue(body(value))
@@ -58,7 +58,7 @@ extension NodeNonFailableInstant where Stage == ResultsStage {
     }
 }
 
-extension NodeFailableInstant where Stage == ResultsStage {
+extension NodeFailableInstant where Stage == Thenable {
     
     func then<U>(_ body: (T) -> U) -> ChainableResult<U> {
         switch result {
@@ -153,7 +153,7 @@ extension NodeFailableInstant where Stage == ResultsStage {
     }
 }
 
-extension NodeNonFailableAsync where Stage == ResultsStage {
+extension NodeNonFailableAsync where Stage == Thenable {
     
     func then<U>(_ body: @escaping (T) -> U) -> Guarantee<U> {
         return Guarantee<U>(Task.init {
@@ -214,7 +214,7 @@ extension NodeNonFailableAsync where Stage == ResultsStage {
     }
 }
 
-extension NodeFailableAsync where Stage == ResultsStage {
+extension NodeFailableAsync where Stage == Thenable {
     
     func then<U>(_ body: @escaping (T) -> U) -> Promise<U> {
         return Promise<U>(Task.init {

@@ -1,5 +1,7 @@
 import Foundation
 
+// Note: When you are using recover and T is void or (), then either 1) You are intending to stack on further operations after the correction, or 2) you could have used `catch`. For this reason, there are no @discardableResult recover functions. For this use case, catch should be used.
+
 private func recoverAsyncBody<T>(_ body: @escaping (Error) async -> T, result: SResult<T>) async -> T {
     switch result {
     case .success(let value):
@@ -20,7 +22,7 @@ private func recoverAsyncThrowsBody<T>(_ body: @escaping (Error) async throws ->
     }
 }
 
-extension NodeFailableInstant where Stage == ResultsStage {
+extension NodeFailableInstant where Stage == Thenable {
     
     func recover(_ body: (Error) -> T) -> ChainableValue<T> {
         switch result {
@@ -58,7 +60,7 @@ extension NodeFailableInstant where Stage == ResultsStage {
     }
 }
 
-extension NodeFailableAsync where Stage == ResultsStage {
+extension NodeFailableAsync where Stage == Thenable {
     
     // These recover functions are async because the current result is already async.
     func recover(_ body: @escaping (Error) -> T) -> Guarantee<T> {

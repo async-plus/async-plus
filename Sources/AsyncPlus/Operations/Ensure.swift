@@ -1,6 +1,8 @@
 import Foundation
 
-// Note: There is no point using `ensure` with a non-failable node (you might as well use `then`). There is also not much of a use case for having an `ensure` operation with a failable body (I think).
+// Note: There is no point using `ensure` with a non-failable node (you might as well use `then`). There is also not much of a use case for having an `ensure` operation with a failable body (I think), as it is unclear what the desired behavior here would be for passing on an error.
+
+// Note: No `ensure` function is marked with @discardableResult because `finally` is the preferred way of endingg the chain.
 
 private func ensureAsyncBody<T>(_ body: @escaping () async -> (), result: SResult<T>) async throws -> T {
     
@@ -13,7 +15,7 @@ private func ensureAsyncBody<T>(_ body: @escaping () async -> (), result: SResul
     }
 }
 
-extension NodeFailableInstant where Stage == ResultsStage {
+extension NodeFailableInstant where Stage == Thenable {
     
     func ensure(_ body: () -> ()) -> ChainableResult<T> {
         body()
@@ -27,7 +29,7 @@ extension NodeFailableInstant where Stage == ResultsStage {
     }
 }
 
-extension NodeFailableInstant where Stage == FailuresStage {
+extension NodeFailableInstant where Stage: Caught {
     
     func ensure(_ body: () -> ()) -> CaughtResult<T> {
         body()
@@ -41,7 +43,7 @@ extension NodeFailableInstant where Stage == FailuresStage {
     }
 }
 
-extension NodeFailableAsync where Stage == ResultsStage {
+extension NodeFailableAsync where Stage == Thenable {
     
     func ensure(_ body: @escaping () -> ()) -> Promise<T> {
         return Promise<T>(Task.init {
@@ -63,7 +65,7 @@ extension NodeFailableAsync where Stage == ResultsStage {
     }
 }
 
-extension NodeFailableAsync where Stage == FailuresStage {
+extension NodeFailableAsync where Stage: Caught {
     
     func ensure(_ body: @escaping () -> ()) -> CaughtPromise<T> {
         return CaughtPromise<T>(Task.init {
