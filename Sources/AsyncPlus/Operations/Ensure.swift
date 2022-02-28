@@ -2,18 +2,7 @@ import Foundation
 
 // Note: There is no point using `ensure` with a non-failable node (you might as well use `then`). There is also not much of a use case for having an `ensure` operation with a failable body (I think), as it is unclear what the desired behavior here would be for passing on an error.
 
-// Note: No `ensure` function is marked with @discardableResult because `finally` is the preferred way of endingg the chain.
-
-private func ensureAsyncBody<T>(_ body: @escaping () async -> (), result: SResult<T>) async throws -> T {
-    
-    await body()
-    switch result {
-    case .success(let value):
-        return value
-    case .failure(let error):
-        throw error
-    }
-}
+// Note: No `ensure` function is marked with @discardableResult because `finally` is the preferred way of ending the chain.
 
 extension NodeFailableInstant where Stage == Thenable {
     
@@ -87,4 +76,13 @@ extension NodeFailableAsync where Stage: Caught {
     }
 }
 
-
+private func ensureAsyncBody<T>(_ body: @escaping () async -> (), result: SimpleResult<T>) async throws -> T {
+    
+    await body()
+    switch result {
+    case .success(let value):
+        return value
+    case .failure(let error):
+        throw error
+    }
+}

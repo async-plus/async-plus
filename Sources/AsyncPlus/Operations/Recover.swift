@@ -2,26 +2,6 @@ import Foundation
 
 // Note: When you are using recover and T is void or (), then either 1) You are intending to stack on further operations after the correction, or 2) you could have used `catch`. For this reason, there are no @discardableResult recover functions. For this use case, catch should be used.
 
-private func recoverAsyncBody<T>(_ body: @escaping (Error) async -> T, result: SResult<T>) async -> T {
-    switch result {
-    case .success(let value):
-        return value
-    case .failure(let error):
-        // TODO: What to do with previous error
-        return await body(error)
-    }
-}
-
-private func recoverAsyncThrowsBody<T>(_ body: @escaping (Error) async throws -> T, result: SResult<T>) async throws -> T {
-    switch result {
-    case .success(let value):
-        return value
-    case .failure(let error):
-        // TODO: What to do with previous error
-        return try await body(error)
-    }
-}
-
 extension NodeFailableInstant where Stage == Thenable {
     
     func recover(_ body: (Error) -> T) -> ChainableValue<T> {
@@ -41,7 +21,7 @@ extension NodeFailableInstant where Stage == Thenable {
             do {
                 return ChainableResult(.success(try body(errorOriginal)))
             } catch {
-                // TODO: consider compound error here
+                // TODO: what to do with shadowed error
                 return ChainableResult(.failure(error))
             }
         }
@@ -80,6 +60,7 @@ extension NodeFailableAsync where Stage == Thenable {
             case .success(let value):
                 return value
             case .failure(let errorOriginal):
+                // TODO: What to do with the shadowed
                 return try body(errorOriginal)
             }
         })
@@ -95,5 +76,24 @@ extension NodeFailableAsync where Stage == Thenable {
         return Promise<T>(Task.init {
             try await recoverAsyncThrowsBody(body, result: await task.result)
         })
+    }
+}
+
+private func recoverAsyncBody<T>(_ body: @escaping (Error) async -> T, result: SimpleResult<T>) async -> T {
+    switch result {
+    case .success(let value):
+        return value
+    case .failure(let error):
+        return await body(error)
+    }
+}
+
+private func recoverAsyncThrowsBody<T>(_ body: @escaping (Error) async throws -> T, result: SimpleResult<T>) async throws -> T {
+    switch result {
+    case .success(let value):
+        return value
+    case .failure(let error):
+        // TODO: What to do with the shadowed
+        return try await body(error)
     }
 }

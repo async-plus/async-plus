@@ -1,8 +1,6 @@
 import Foundation
 import AppKit
 
-// TODO: If T is () and Fails is NeverFails, then the result is discardable
-
 protocol Node {
     associatedtype T
     associatedtype Fails: FailableFlag
@@ -20,7 +18,7 @@ protocol NodeNonFailableInstant: NodeNonFailable, NodeInstant {
 }
 
 protocol NodeFailableInstant: NodeFailable, NodeInstant {
-    var result: SResult<T> { get }
+    var result: SimpleResult<T> { get }
 }
 extension NodeFailableInstant {
     public func `throws`() throws -> T {
@@ -68,7 +66,7 @@ extension NodeFailableAsync {
         }
     }
     
-    public func asyncResult() async -> SResult<T> {
+    public func asyncResult() async -> SimpleResult<T> {
         return await task.result
     }
 }
@@ -84,9 +82,9 @@ final class GenericNodeNonFailableInstant<T, Stage: StageFlag>: NodeNonFailableI
 
 final class GenericNodeFailableInstant<T, Stage: StageFlag>: NodeFailableInstant {
     
-    let result: SResult<T>
+    let result: SimpleResult<T>
     
-    init(_ result: SResult<T>) {
+    init(_ result: SimpleResult<T>) {
         self.result = result
     }
 }

@@ -3,28 +3,6 @@ import Foundation
 
 // Note: catch operations with bodies that are non-throwing are marked with @discardableResult, because all errors are presumably handled. However, if a catch has a throwing body, then an error could still arise. This can be handled with a call to .throws() to progagate the error, or chained with another `catch` operation with a non-throwing body.
 
-private func catchAsyncBody<T>(_ body: @escaping (Error) async -> (), result: SResult<T>) async throws -> T {
-    switch result {
-    case .success(let value):
-        return value
-    case .failure(let error):
-        // TODO: What to do with previous error
-        await body(error)
-        throw error
-    }
-}
-
-private func catchAsyncThrowsBody<T>(_ body: @escaping (Error) async throws -> (), result: SResult<T>) async throws -> T {
-    switch result {
-    case .success(let value):
-        return value
-    case .failure(let error):
-        // TODO: What to do with previous error
-        try await body(error)
-        throw error
-    }
-}
-
 extension NodeFailableInstant where Stage: Chainable {
 
     @discardableResult
@@ -38,11 +16,11 @@ extension NodeFailableInstant where Stage: Chainable {
     func `catch`(_ body: (Error) throws -> ()) -> PartiallyCaughtResult<T> {
         do {
             if case .failure(let error) = result {
+                // TODO: What to do with shadowed error
                 try body(error)
             }
             return(PartiallyCaughtResult(result))
         } catch {
-            // TODO: Compound error?
             return PartiallyCaughtResult(.failure(error))
         }
     }
@@ -103,5 +81,24 @@ extension NodeFailableAsync where Stage: Chainable {
     }
 }
 
+private func catchAsyncBody<T>(_ body: @escaping (Error) async -> (), result: SimpleResult<T>) async throws -> T {
+    switch result {
+    case .success(let value):
+        return value
+    case .failure(let error):
+        await body(error)
+        throw error
+    }
+}
 
+private func catchAsyncThrowsBody<T>(_ body: @escaping (Error) async throws -> (), result: SimpleResult<T>) async throws -> T {
+    switch result {
+    case .success(let value):
+        return value
+    case .failure(let error):
+        // TODO: What to do with shadowed error
+        try await body(error)
+        throw error
+    }
+}
 
