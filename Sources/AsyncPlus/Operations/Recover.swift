@@ -21,7 +21,6 @@ extension NodeFailableInstant where Stage == Thenable {
             do {
                 return ChainableResult(.success(try body(errorOriginal)))
             } catch {
-                // TODO: what to do with shadowed error
                 return ChainableResult(.failure(error))
             }
         }
@@ -60,7 +59,6 @@ extension NodeFailableAsync where Stage == Thenable {
             case .success(let value):
                 return value
             case .failure(let errorOriginal):
-                // TODO: What to do with the shadowed
                 return try body(errorOriginal)
             }
         })
@@ -93,7 +91,6 @@ private func recoverAsyncThrowsBody<T>(_ body: @escaping (Error) async throws ->
     case .success(let value):
         return value
     case .failure(let error):
-        // TODO: What to do with the shadowed
         return try await body(error)
     }
 }

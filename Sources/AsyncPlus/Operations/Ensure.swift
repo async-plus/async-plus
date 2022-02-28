@@ -1,6 +1,6 @@
 import Foundation
 
-// Note: There is no point using `ensure` with a non-failable node (you might as well use `then`). There is also not much of a use case for having an `ensure` operation with a failable body (I think), as it is unclear what the desired behavior here would be for passing on an error.
+// Note: There is no point using `ensure` with a non-failable node (you might as well use `then`). There is also not much of a use case for having an `ensure` operation with a failable body, as it is unclear what the desired behavior here would be for passing on an error.
 
 // Note: No `ensure` function is marked with @discardableResult because `finally` is the preferred way of ending the chain.
 

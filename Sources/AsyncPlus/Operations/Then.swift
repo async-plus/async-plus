@@ -1,5 +1,6 @@
 import Foundation
 
+// Note: For @discardableResult we require return type to be () or void. Otherwise, the operation produces a result which implies the result should be used in some kind of chained call.
 
 extension NodeNonFailableInstant where Stage == Thenable {
     
