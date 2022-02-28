@@ -14,7 +14,49 @@ Layer catch behavior for later:
     - Log
 Recovery or plan B
 
+## When should a value be passed down the chain?
+- `async let value = attempt`: for parallel async code (you then call `let values = await [value, otherValue])`
+- `let value = await attempt`
+- Besides this case, why should we produce a value? It would only be used otherwise in a "done" block.
+Counterexample to above:
+```
+attempt {
+    return await api.getPhoto()
+}.recover {
+    err in
+    return await cache.getPhoto()
+}.then {
+    photo in
+    try displayPhotoToUser(photo)
+}.catch {
+    err in 
+    self.alert(message: err.localizedDescription)
+}
+```
+Alternative to above:
+```
+let Result<photo> = attempt {
+    return await api.getPhoto()
+}.recover {
+    err in
+    return await cache.getPhoto()
+}.then {
+    photo in
+    try displayPhotoToUser(photo)
+}
+```
+
+
 ## Future directions:
+
+Different types of contexts:
+- Non-throwing, non async
+    You need to both catch all errors
+
+- Throwing, non async
+- Non-throwing, async
+- Throwing, async
+
 How would this be used in each?
 
 *Cancel*
@@ -48,7 +90,3 @@ guard let v: Person? = await attempt {
     
 }
 ```
-
-*Allow async done blocks?*
-
-

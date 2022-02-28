@@ -1,6 +1,8 @@
 import Foundation
 import AppKit
 
+// TODO: If T is () and Fails is NeverFails, then the result is discardable
+
 protocol Node {
     associatedtype T
     associatedtype Fails: FailableFlag
@@ -8,7 +10,7 @@ protocol Node {
     associatedtype Stage: StageFlag
 }
 
-protocol NodeNonFailable: Node where Fails == FailsNever {}
+protocol NodeNonFailable: Node where Fails == NeverFails {}
 protocol NodeFailable: Node where Fails == Sometimes {}
 protocol NodeInstant: Node where When == Instant {}
 protocol NodeAsync: Node where When == Async {}
@@ -73,5 +75,66 @@ extension NodeFailableAsync {
     
     public func asyncResult() async -> SResult<T> {
         return await task.result
+    }
+}
+
+
+final class ChainableValue<T>: NodeNonFailableInstant {
+    typealias Stage = ResultsStage
+    
+    let result: T
+    
+    init(_ value: T) {
+        self.result = value
+    }
+}
+
+final class ChainableResult<T>: NodeFailableInstant {
+    typealias Stage = ResultsStage
+    
+    let result: SResult<T>
+    
+    init(_ result: SResult<T>) {
+        self.result = result
+    }
+}
+
+final class Guarantee<T>: NodeNonFailableAsync {
+    typealias Stage = ResultsStage
+    
+    let task: NonFailableTask<T>
+    
+    init(_ task: NonFailableTask<T>) {
+        self.task = task
+    }
+}
+
+final class Promise<T>: NodeFailableAsync {
+    typealias Stage = ResultsStage
+    
+    let task: FailableTask<T>
+    
+    init(_ task: FailableTask<T>) {
+        self.task = task
+    }
+}
+
+final class CatchableResult<T>: NodeFailableInstant {
+    typealias Stage = FailuresStage
+    
+    let result: SResult<T>
+
+    init(_ result: SResult<T>) {
+        self.result = result
+    }
+}
+
+final class CatchablePromise<T>: NodeFailableAsync {
+    typealias Stage = FailuresStage
+    
+    let task: FailableTask<T>
+
+    init(_ task: FailableTask<T>) {
+        self.task = task
     }
 }

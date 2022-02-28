@@ -36,9 +36,3 @@ We add these new operations:
 `.promise`: Can call if you have not called `done`.
 `.future`: returns a Combine Future for the operation
 
-Guarantee: we need another type parameter for the error:
-Sometimes or FailsNever are subclasses.
-
-Guarantee is just for when error is never.
-
-Instantaneous: we need another type parameter for whether results are instantaneous. This way we could use things like `.throws()`. If all blocks have been non-async, then we have an instantaneous block. However in reality there are calls to Task.init which means none of it is really instantaneous as far as implementation. Would need to fix that.
