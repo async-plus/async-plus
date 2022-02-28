@@ -3,7 +3,7 @@ import XCTest
 
 final class AsyncPlusTests: XCTestCase {
     
-    func testInstant1() throws {
+    func testChain1() throws {
         
         let expectation = expectation(description: "")
         
@@ -27,7 +27,7 @@ final class AsyncPlusTests: XCTestCase {
         waitForExpectations(timeout: 2.1, handler: nil)
     }
     
-    func testInstant2() throws {
+    func testChain2() throws {
         
         let expectation = expectation(description: "")
         
@@ -54,5 +54,41 @@ final class AsyncPlusTests: XCTestCase {
         }
         
         waitForExpectations(timeout: 4.1, handler: nil)
+    }
+    
+    func testDeferredChaining() throws {
+        
+        let expectation = expectation(description: "")
+        
+        let firstBit = attempt {
+            () -> Int in
+            try await mockSleepThrowing(seconds: 0.5)
+            return 2
+        }.then {
+            v -> () in
+            print("We did 0.5 seconds of async work.")
+        }.then {
+            v -> String in
+            XCTAssert(v == 2)
+            await mockSleep(seconds: 0.25)
+            return "Bob"
+        }
+        
+        sleep(2)
+        
+        print("Let's resume our chaining..")
+        
+        // When we call this `then`, firstBit will already have resolved to a result
+        firstBit.then {
+            str in
+            XCTAssert(str == "Bob")
+            expectation.fulfill()
+        }.catch {
+            err in
+            print("This won't get here")
+        }
+        
+        // Calls to `sleep` apparently pause the waitForExpectations timeout as well..
+        waitForExpectations(timeout: 1.0, handler: nil)
     }
 }
