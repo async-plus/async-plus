@@ -1,13 +1,12 @@
 import Foundation
 
-/// An internal enum for representing results; constrained further for compile-time optimization
-enum Result<T> {
-    
-    case success(T)
-    case failure(Error)
+/// Simple result
+typealias SResult<Success> = Result<Success, Error>
+
+extension SResult {
     
     /// Converts to a result of Any type
-    func asAny() -> Result<Any> {
+    func asAny() -> SResult<Any> {
         switch self {
         case .success(let value):
             return .success(value as Any)
@@ -17,7 +16,7 @@ enum Result<T> {
     }
     
     /// Force casts to a result of the specified type
-    func forceSpecializeAs<U>(type: U.Type) -> Result<U> {
+    func forceSpecializeAs<U>(type: U.Type) -> SResult<U> {
         switch self {
         case .success(let value):
             return .success(value as! U)
@@ -26,7 +25,7 @@ enum Result<T> {
         }
     }
     
-    func asSwiftResult() -> Swift.Result<T, Error> {
+    func asSwiftResult() -> Result<Success, Error> {
         switch self {
         case .success(let value):
             return .success(value)

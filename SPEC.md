@@ -37,7 +37,7 @@ We add these new operations:
 `.future`: returns a Combine Future for the operation
 
 Guarantee: we need another type parameter for the error:
-Sometimes or Never are subclasses.
+Sometimes or FailsNever are subclasses.
 
 Guarantee is just for when error is never.
 

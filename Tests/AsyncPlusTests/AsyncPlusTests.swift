@@ -33,21 +33,50 @@ final class AsyncPlusTests: XCTestCase {
         XCTAssertEqual("Hello, World!", "Hello, World!")
     }
     
-    func testChaining() throws {
+    func testInstant1() throws {
         
+        let expectation = expectation(description: "")
         
         attempt {
+            () -> Int in
             print("Start counting")
-            try await Task.sleep(nanoseconds: 1 * NSEC_PER_SEC)
             throw ErrorIndicator.finallyHasRun
         }.recover {
             err in
-            try await Task.sleep(nanoseconds: 2 * NSEC_PER_SEC)
-            // End counting
+            print("We recovered")
+            expectation.fulfill()
+            return 2
         }.catch {
             err in
-            throw ErrorIndicator.finallyHasRun
+            print("Error \(err)")
         }
+        
+        waitForExpectations(timeout: 1, handler: nil)
+    }
+    
+    func testInstant2() throws {
+        
+        let expectation = expectation(description: "")
+        
+        attempt {
+            () -> Int in
+            print("Start counting")
+            throw ErrorIndicator.finallyHasRun
+        }.recover {
+            err -> Int in
+            print("We recovered")
+            throw ErrorIndicator.uninitialized
+        }.catch {
+            err in
+            print("Error \(err)")
+            throw ErrorIndicator.hasBeenCaught
+        }.catch {
+            err in
+            XCTAssert(err as! ErrorIndicator == ErrorIndicator.hasBeenCaught)
+            expectation.fulfill()
+        }
+        
+        waitForExpectations(timeout: 1, handler: nil)
     }
 
 }

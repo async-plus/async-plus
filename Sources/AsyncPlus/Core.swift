@@ -3,10 +3,8 @@ import AppKit
 
 let backgroundSyncQueue = DispatchQueue(label: "serial-queue")
 
-enum Future<T> {
-    case pending
-    case resolved(T)
-}
+typealias NonFailableTask<T> = Task<T, Never>
+typealias FailableTask<T> = Task<T, Error>
 
 protocol Node {
     associatedtype T
@@ -15,7 +13,7 @@ protocol Node {
     associatedtype Stage: StageFlag
 }
 
-protocol NodeNonFailable: Node where Fails == Never {}
+protocol NodeNonFailable: Node where Fails == FailsNever {}
 protocol NodeFailable: Node where Fails == Sometimes {}
 protocol NodeInstant: Node where When == Instant {}
 protocol NodeAsync: Node where When == Async {}
@@ -25,15 +23,15 @@ protocol NodeNonFailableInstant: NodeNonFailable, NodeInstant {
 }
 
 protocol NodeFailableInstant: NodeFailable, NodeInstant {
-    var result: Result<T> { get }
+    var result: SResult<T> { get }
 }
 
 protocol NodeNonFailableAsync: NodeNonFailable, NodeAsync {
-    var result: Future<T> { get }
+    var task: NonFailableTask<T> { get }
 }
 
 protocol NodeFailableAsync: NodeFailable, NodeAsync {
-    var result: Future<Result<T>> { get }
+    var task: FailableTask<T> { get }
 }
 
 // START attempt
@@ -68,7 +66,7 @@ final class AttemptNonFailableInstant<T>: NodeNonFailableInstant {
 final class AttemptFailableInstant<T>: NodeFailableInstant {
     typealias Stage = ResultsStage
     
-    let result: Result<T>
+    let result: SResult<T>
     
     init(_ body: () throws -> T) {
         do {
@@ -82,13 +80,11 @@ final class AttemptFailableInstant<T>: NodeFailableInstant {
 final class AttemptNonFailableAsync<T>: NodeNonFailableAsync {
     typealias Stage = ResultsStage
     
-    // Result is a raw future because Never Async
-    var result: Future<T> = .pending
+    let task: NonFailableTask<T>
     
     init(_ body: @escaping () async -> T) {
-        Task.init {
-            result = .resolved(await body())
-            // TODO: execute all other items in the chain
+        task = Task.init {
+            return await body()
         }
     }
 }
@@ -97,17 +93,11 @@ final class AttemptNonFailableAsync<T>: NodeNonFailableAsync {
 final class AttemptFailableAsync<T>: NodeFailableAsync {
     typealias Stage = ResultsStage
     
-    // Result is a result future because Sometimes Async
-    var result: Future<Result<T>> = .pending
+    let task: FailableTask<T>
     
     init(_ body: @escaping () async throws -> T) {
-        Task.init {
-            do {
-                result = .resolved(.success(try await body()))
-            } catch {
-                result = .resolved(.failure(error))
-            }
-            // TODO: Do next in chain
+        task = Task.init {
+            try await body()
         }
     }
 }
@@ -123,40 +113,45 @@ extension NodeFailableInstant where Stage == ResultsStage {
     func recover(_ body: (Error) throws -> T) -> RecoverFailableInstant<T> {
         return RecoverFailableInstant(body, input: result)
     }
+    
+    func recover(_ body: @escaping (Error) async -> T) -> RecoverNonFailableAsync<T> {
+        return RecoverNonFailableAsync(body, input: result)
+    }
+    
+    func recover(_ body: @escaping (Error) async throws -> T) -> RecoverFailableAsync<T> {
+        return RecoverFailableAsync(body, input: result)
+    }
 }
 
 extension NodeFailableAsync where Stage == ResultsStage {
     
     // These recover functions are async because the current result is already async.
     func recover(_ body: @escaping (Error) -> T) -> RecoverNonFailableAsync<T> {
-        return RecoverNonFailableAsync(body)
+        return RecoverNonFailableAsync(body, input: task)
     }
     
     func recover(_ body: @escaping (Error) throws -> T) -> RecoverFailableAsync<T> {
-        return RecoverFailableAsync(body)
+        return RecoverFailableAsync(body, input: task)
     }
-}
-
-extension NodeFailable where Stage == ResultsStage {
     
     func recover(_ body: @escaping (Error) async -> T) -> RecoverNonFailableAsync<T> {
-        return RecoverNonFailableAsync(body)
+        return RecoverNonFailableAsync(body, input: task)
     }
     
     func recover(_ body: @escaping (Error) async throws -> T) -> RecoverFailableAsync<T> {
-        return RecoverFailableAsync(body)
+        return RecoverFailableAsync(body, input: task)
     }
 }
+
 // END recover
 
 // START Recover
 final class RecoverNonFailableInstant<T>: NodeNonFailableInstant {
     typealias Stage = ResultsStage
     
-    // Result is a raw because Never Instant
     let result: T
     
-    init(_ body: (Error) -> T, input: Result<T>) {
+    init(_ body: (Error) -> T, input: SResult<T>) {
         switch input {
         case .success(let value):
             result = value
@@ -169,10 +164,9 @@ final class RecoverNonFailableInstant<T>: NodeNonFailableInstant {
 final class RecoverFailableInstant<T>: NodeFailableInstant {
     typealias Stage = ResultsStage
     
-    // Result is a result raw because Sometimes Instant
-    let result: Result<T>
+    let result: SResult<T>
     
-    init(_ body: (Error) throws -> T, input: Result<T>) {
+    init(_ body: (Error) throws -> T, input: SResult<T>) {
         switch input {
         case .success(let value):
             result = .success(value)
@@ -190,31 +184,66 @@ final class RecoverFailableInstant<T>: NodeFailableInstant {
 final class RecoverNonFailableAsync<T>: NodeNonFailableAsync {
     typealias Stage = ResultsStage
     
-    // Result is a raw future because Never Async
-    var result: Future<T> = .pending
-    let body: (Error) async -> T
+    let task: NonFailableTask<T>
     
-    init(_ body: @escaping (Error) async -> T) {
-        self.body = body
+    private static func sharedInit(_ body: @escaping (Error) async -> T, result: SResult<T>) async -> T {
+        switch result {
+        case .success(let value):
+            return value
+        case .failure(let error):
+            // TODO: What to do with previous error
+            return await body(error)
+        }
+    }
+    
+    init(_ body: @escaping (Error) async -> T, input: FailableTask<T>) {
+        task = Task.init {
+            await RecoverNonFailableAsync<T>.sharedInit(body, result: await input.result)
+        }
+    }
+    
+    init(_ body: @escaping (Error) async -> T, input: SResult<T>) {
+        task = Task.init {
+            await RecoverNonFailableAsync<T>.sharedInit(body, result: input)
+        }
     }
 }
 
 final class RecoverFailableAsync<T>: NodeFailableAsync {
     typealias Stage = ResultsStage
     
-    // Result is a result future because Sometimes Async
-    var result: Future<Result<T>> = .pending
-    let body: (Error) async throws -> T
+    let task: FailableTask<T>
     
-    init(_ body: @escaping (Error) async throws -> T) {
-        self.body = body
+    private static func sharedInit(_ body: @escaping (Error) async throws -> T, result: SResult<T>) async throws -> T {
+            switch result {
+            case .success(let value):
+                return value
+            case .failure(let error):
+                // TODO: What to do with previous error
+                return try await body(error)
+        }
+    }
+    
+    init(_ body: @escaping (Error) async throws -> T, input: FailableTask<T>) {
+        task = Task.init {
+            try await RecoverFailableAsync<T>.sharedInit(body, result: await input.result)
+        }
+    }
+    
+    init(_ body: @escaping (Error) async throws -> T, input: SResult<T>) {
+        task = Task.init {
+            try await RecoverFailableAsync<T>.sharedInit(body, result: input)
+        }
     }
 }
 // END Recover
 
 // START catch
+// Note: catch operations with bodies that are non-throwing are marked with @discardableResult, because all errors are presumably handled. However, if a catch has a throwing body, then an error could still arise. This can be handled with a call to .throws() to progagate the error, or chained with another `catch` operation with a non-throwing body.
+
 extension NodeFailableInstant {
 
+    @discardableResult
     func `catch`(_ body: (Error) -> ()) -> CatchNonFailableInstant<T> {
         // In this case, because there is no throw, there is n
         return CatchNonFailableInstant(body, input: result)
@@ -223,31 +252,38 @@ extension NodeFailableInstant {
     func `catch`(_ body: (Error) throws -> ()) -> CatchFailableInstant<T> {
         return CatchFailableInstant(body, input: result)
     }
+    
+    @discardableResult
+    func `catch`(_ body: @escaping (Error) async -> ()) -> CatchNonFailableAsync<T> {
+        return CatchNonFailableAsync(body, input: result)
+    }
+
+    func `catch`(_ body: @escaping (Error) async throws -> ()) -> CatchFailableAsync<T> {
+        return CatchFailableAsync(body, input: result)
+    }
 }
 
 extension NodeFailableAsync {
 
-    // These recover functions are async because the current result is already async.
+    // These catch functions are async because the current result is already async.
+    @discardableResult
     func `catch`(_ body: @escaping (Error) -> ()) -> CatchNonFailableAsync<T> {
-        return CatchNonFailableAsync(body)
+        return CatchNonFailableAsync(body, input: task)
     }
 
     func `catch`(_ body: @escaping (Error) throws -> ()) -> CatchFailableAsync<T> {
-        return CatchFailableAsync(body)
+        return CatchFailableAsync(body, input: task)
     }
-}
-
-extension NodeFailable {
-
+    
+    @discardableResult
     func `catch`(_ body: @escaping (Error) async -> ()) -> CatchNonFailableAsync<T> {
-        return CatchNonFailableAsync(body)
+        return CatchNonFailableAsync(body, input: task)
     }
 
     func `catch`(_ body: @escaping (Error) async throws -> ()) -> CatchFailableAsync<T> {
-        return CatchFailableAsync(body)
+        return CatchFailableAsync(body, input: task)
     }
 }
-
 // END catch
 
 // START Catch
@@ -256,9 +292,9 @@ extension NodeFailable {
 final class CatchNonFailableInstant<T>: NodeFailableInstant {
     typealias Stage = FailuresStage
     
-    let result: Result<T>
+    let result: SResult<T>
 
-    init(_ body: (Error) -> (), input: Result<T>) {
+    init(_ body: (Error) -> (), input: SResult<T>) {
         if case .failure(let error) = input {
             body(error)
         }
@@ -268,9 +304,9 @@ final class CatchNonFailableInstant<T>: NodeFailableInstant {
 
 final class CatchFailableInstant<T>: NodeFailableInstant {
     typealias Stage = FailuresStage
-    let result: Result<T>
+    let result: SResult<T>
 
-    init(_ body: (Error) throws -> (), input: Result<T>) {
+    init(_ body: (Error) throws -> (), input: SResult<T>) {
         do {
             if case .failure(let error) = input {
                 try body(error)
@@ -286,22 +322,58 @@ final class CatchFailableInstant<T>: NodeFailableInstant {
 final class CatchNonFailableAsync<T>: NodeFailableAsync {
     typealias Stage = FailuresStage
     
-    var result: Future<Result<T>> = .pending
-    let body: (Error) async -> ()
+    let task: FailableTask<T>
     
-    init(_ body: @escaping (Error) async -> ()) {
-        self.body = body
+    private static func sharedInit(_ body: @escaping (Error) async -> (), result: SResult<T>) async throws -> T {
+        switch result {
+        case .success(let value):
+            return value
+        case .failure(let error):
+            // TODO: What to do with previous error
+            await body(error)
+            throw error
+        }
+    }
+    
+    init(_ body: @escaping (Error) async -> (), input: FailableTask<T>) {
+        task = Task.init {
+            try await CatchNonFailableAsync<T>.sharedInit(body, result: await input.result)
+        }
+    }
+    
+    init(_ body: @escaping (Error) async -> (), input: SResult<T>) {
+        task = Task.init {
+            try await CatchNonFailableAsync<T>.sharedInit(body, result: input)
+        }
     }
 }
 
 final class CatchFailableAsync<T>: NodeFailableAsync {
     typealias Stage = FailuresStage
     
-    var result: Future<Result<T>> = .pending
-    let body: (Error) async throws -> ()
+    let task: FailableTask<T>
     
-    init(_ body: @escaping (Error) async throws -> ()) {
-        self.body = body
+    private static func sharedInit(_ body: @escaping (Error) async throws -> (), result: SResult<T>) async throws -> T {
+        switch result {
+        case .success(let value):
+            return value
+        case .failure(let error):
+            // TODO: What to do with previous error
+            try await body(error)
+            throw error
+        }
+    }
+    
+    init(_ body: @escaping (Error) async throws -> (), input: FailableTask<T>) {
+        task = Task.init {
+            try await CatchFailableAsync<T>.sharedInit(body, result: await input.result)
+        }
+    }
+    
+    init(_ body: @escaping (Error) async throws -> (), input: SResult<T>) {
+        task = Task.init {
+            try await CatchFailableAsync<T>.sharedInit(body, result: input)
+        }
     }
 }
 // END Catch

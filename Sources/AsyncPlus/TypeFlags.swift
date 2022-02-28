@@ -5,7 +5,7 @@ import Foundation
 class FailableFlag {}
 
 /// Flag indicating that the result of the node could never be a failure.
-final class Never: FailableFlag {}
+final class FailsNever: FailableFlag {}
 
 /// Flag indicating that the result of the node can sometimes be a failure.
 final class Sometimes: FailableFlag {}
