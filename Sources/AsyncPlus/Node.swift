@@ -16,12 +16,7 @@ protocol NodeInstant: Node where When == Instant {}
 protocol NodeAsync: Node where When == Async {}
 
 protocol NodeNonFailableInstant: NodeNonFailable, NodeInstant {
-    var result: T { get }
-}
-extension NodeNonFailableInstant {
-    public var value: T {
-        return result
-    }
+    var value: T { get }
 }
 
 protocol NodeFailableInstant: NodeFailable, NodeInstant {
@@ -82,10 +77,10 @@ extension NodeFailableAsync {
 final class ChainableValue<T>: NodeNonFailableInstant {
     typealias Stage = ResultsStage
     
-    let result: T
+    let value: T
     
     init(_ value: T) {
-        self.result = value
+        self.value = value
     }
 }
 
@@ -119,7 +114,7 @@ final class Promise<T>: NodeFailableAsync {
     }
 }
 
-final class CatchableResult<T>: NodeFailableInstant {
+final class CaughtResult<T>: NodeFailableInstant {
     typealias Stage = FailuresStage
     
     let result: SResult<T>
@@ -129,7 +124,7 @@ final class CatchableResult<T>: NodeFailableInstant {
     }
 }
 
-final class CatchablePromise<T>: NodeFailableAsync {
+final class CaughtPromise<T>: NodeFailableAsync {
     typealias Stage = FailuresStage
     
     let task: FailableTask<T>

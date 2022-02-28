@@ -29,13 +29,13 @@ extension NodeFailableInstant where Stage == ResultsStage {
 
 extension NodeFailableInstant where Stage == FailuresStage {
     
-    func ensure(_ body: () -> ()) -> CatchableResult<T> {
+    func ensure(_ body: () -> ()) -> CaughtResult<T> {
         body()
-        return CatchableResult<T>(result)
+        return CaughtResult<T>(result)
     }
     
-    func ensure(_ body: @escaping () async -> ()) -> CatchablePromise<T> {
-        return CatchablePromise(Task.init {
+    func ensure(_ body: @escaping () async -> ()) -> CaughtPromise<T> {
+        return CaughtPromise(Task.init {
             return try await ensureAsyncBody(body, result: result)
         })
     }
@@ -65,8 +65,8 @@ extension NodeFailableAsync where Stage == ResultsStage {
 
 extension NodeFailableAsync where Stage == FailuresStage {
     
-    func ensure(_ body: @escaping () -> ()) -> CatchablePromise<T> {
-        return CatchablePromise<T>(Task.init {
+    func ensure(_ body: @escaping () -> ()) -> CaughtPromise<T> {
+        return CaughtPromise<T>(Task.init {
             let result = await task.result
             body()
             switch result {
@@ -78,8 +78,8 @@ extension NodeFailableAsync where Stage == FailuresStage {
         })
     }
     
-    func ensure(_ body: @escaping () async -> ()) -> CatchablePromise<T> {
-        return CatchablePromise(Task.init {
+    func ensure(_ body: @escaping () async -> ()) -> CaughtPromise<T> {
+        return CaughtPromise(Task.init {
             return try await ensureAsyncBody(body, result: await task.result)
         })
     }

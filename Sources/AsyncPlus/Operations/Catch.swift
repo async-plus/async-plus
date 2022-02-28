@@ -28,34 +28,34 @@ private func catchAsyncThrowsBody<T>(_ body: @escaping (Error) async throws -> (
 extension NodeFailableInstant {
 
     @discardableResult
-    func `catch`(_ body: (Error) -> ()) -> CatchableResult<T> {
+    func `catch`(_ body: (Error) -> ()) -> CaughtResult<T> {
         if case .failure(let error) = result {
             body(error)
         }
-        return CatchableResult(result)
+        return CaughtResult(result)
     }
 
-    func `catch`(_ body: (Error) throws -> ()) -> CatchableResult<T> {
+    func `catch`(_ body: (Error) throws -> ()) -> CaughtResult<T> {
         do {
             if case .failure(let error) = result {
                 try body(error)
             }
-            return(CatchableResult(result))
+            return(CaughtResult(result))
         } catch {
             // TODO: Compound error?
-            return CatchableResult(.failure(error))
+            return CaughtResult(.failure(error))
         }
     }
     
     @discardableResult
-    func `catch`(_ body: @escaping (Error) async -> ()) -> CatchablePromise<T> {
-        return CatchablePromise(Task.init {
+    func `catch`(_ body: @escaping (Error) async -> ()) -> CaughtPromise<T> {
+        return CaughtPromise(Task.init {
             try await catchAsyncBody(body, result: result)
         })
     }
 
-    func `catch`(_ body: @escaping (Error) async throws -> ()) -> CatchablePromise<T> {
-        return CatchablePromise(Task.init {
+    func `catch`(_ body: @escaping (Error) async throws -> ()) -> CaughtPromise<T> {
+        return CaughtPromise(Task.init {
             try await catchAsyncThrowsBody(body, result: result)
         })
     }
@@ -65,8 +65,8 @@ extension NodeFailableAsync {
 
     // These catch functions are async because the current result is already async.
     @discardableResult
-    func `catch`(_ body: @escaping (Error) -> ()) -> CatchablePromise<T> {
-        return CatchablePromise(Task.init {
+    func `catch`(_ body: @escaping (Error) -> ()) -> CaughtPromise<T> {
+        return CaughtPromise(Task.init {
             switch await task.result {
             case .success(let value):
                 return value
@@ -77,8 +77,8 @@ extension NodeFailableAsync {
         })
     }
 
-    func `catch`(_ body: @escaping (Error) throws -> ()) -> CatchablePromise<T> {
-        return CatchablePromise(Task.init {
+    func `catch`(_ body: @escaping (Error) throws -> ()) -> CaughtPromise<T> {
+        return CaughtPromise(Task.init {
             switch await task.result {
             case .success(let value):
                 return value
@@ -90,14 +90,14 @@ extension NodeFailableAsync {
     }
     
     @discardableResult
-    func `catch`(_ body: @escaping (Error) async -> ()) -> CatchablePromise<T> {
-        return CatchablePromise(Task.init {
+    func `catch`(_ body: @escaping (Error) async -> ()) -> CaughtPromise<T> {
+        return CaughtPromise(Task.init {
             try await catchAsyncBody(body, result: await task.result)
         })
     }
 
-    func `catch`(_ body: @escaping (Error) async throws -> ()) -> CatchablePromise<T> {
-        return CatchablePromise(Task.init {
+    func `catch`(_ body: @escaping (Error) async throws -> ()) -> CaughtPromise<T> {
+        return CaughtPromise(Task.init {
             try await catchAsyncThrowsBody(body, result: await task.result)
         })
     }
