@@ -21,7 +21,7 @@ final class Instant: WhenFlag {}
 final class Async: WhenFlag {}
 
 
-/// Base class for flags indicating the stage of results along the chain. There are two stages: a results-oriented stage for the beginning, and a failure-catching-oriented stage for the end of the chain.
+/// Base class for flags indicating the stage of results along the chain.
 class StageFlag {}
 
 /// Flag indicating the first stage of chained node operations that allows `thenAttempt` and `recover` operations
