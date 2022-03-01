@@ -24,31 +24,49 @@ final class AsyncPlusTests: XCTestCase {
             print("Error \(err)")
         }
         
-        waitForExpectations(timeout: 2.1, handler: nil)
+        waitForExpectations(timeout: 3, handler: nil)
     }
     
     func testChain2() throws {
         
         let expectation1 = expectation(description: "")
         
+        // TODO: Make into performance test
+        func measure(since: DispatchTime) {
+            let now = DispatchTime.now()
+            let nanoTime = now.uptimeNanoseconds - since.uptimeNanoseconds
+            let timeInterval = Double(nanoTime) / 1_000_000_000
+            print("Time since start: \(timeInterval) seconds")
+        }
+        
+        var start1: DispatchTime!
+        var start2: DispatchTime!
+        var start3: DispatchTime!
+        
         attempt {
             () -> Int in
             print("Start counting")
             await mockSleep(seconds: 1)
+            start1 = DispatchTime.now()
             throw MockError.stackOverflow
         }.recover {
             err -> Int in
+            measure(since: start1)
             print("We recovered")
             try! await mockSleepThrowing(seconds: 1)
+            start2 = DispatchTime.now()
             throw MockError.noInternet
         }.catch {
             err in
+            measure(since: start2)
             print("Error \(err)")
             try await mockSleepThrowing(seconds: 1)
             print("Throwing notImplemented")
+            start3 = DispatchTime.now()
             throw MockError.notImplemented
         }.catch {
             err in
+            measure(since: start3)
             print("Catch run")
             XCTAssert(err as! MockError == MockError.notImplemented)
             print("Type asserted")
@@ -56,7 +74,7 @@ final class AsyncPlusTests: XCTestCase {
             expectation1.fulfill()
         }
         
-        waitForExpectations(timeout: 4.1, handler: nil)
+        waitForExpectations(timeout: 5, handler: nil)
     }
     
     func testDeferredChaining() throws {
