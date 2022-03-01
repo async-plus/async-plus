@@ -1,24 +1,26 @@
-# AsyncPlus
+<a href="https://discord.gg/vaAhGvvHpW">![async+](Images/github-heading.png)</a>
 
-A description of this package.
+<p align="center">
+  <a href="https://docs.asyncplus.codes/1.0/"><img src="https://img.shields.io/badge/read%20the-docs-blue" alt="Documentation"></a>
+  <a href="https://discord.gg/vaAhGvvHpW"><img src="https://img.shields.io/discord/946863161460547684.svg" alt="Team Chat"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-brightgreen.svg" alt="MIT License"></a>
+  <a href="https://github.com/async-plus/async-plus/actions"><img src="https://github.com/vapor/vapor/workflows/test/badge.svg" alt="Continuous Integration"></a>
+  <a href="https://swift.org"><img src="https://img.shields.io/badge/swift-5.5-brightgreen.svg" alt="Swift 5.5"></a>
+  <a href="https://twitter.com/async_plus"><img src="https://img.shields.io/badge/twitter-async__plus-5AA9E7.svg" alt="Twitter"></a>
+</p>
 
+<br>
 
-https://discord.gg/vaAhGvvHpW
-
-## Why?
 Async/Await is the future of asynchronous coding (not promises, futures, or Rx). Missing a few patterns however. Most notably try/retry, chaining catch calls together.
 
 ## Example use cases:
 Layer catch behavior for later:
     - Send to analytics
-    - Log
-Recovery or plan B
+        - Log
+        Recovery or plan B
 
-## When should a value be passed down the chain?
 - `async let value = attempt`: for parallel async code (you then call `let values = await [value, otherValue])`
 - `let value = await attempt`
-- Besides this case, why should we produce a value? It would only be used otherwise in a "done" block.
-Counterexample to above:
 ```
 attempt {
     return await api.getPhoto()
@@ -49,19 +51,7 @@ let Result<photo> = attempt {
 
 ## Future directions:
 
-Different types of contexts:
-- Non-throwing, non async
-    You need to both catch all errors
-
-- Throwing, non async
-- Non-throwing, async
-- Throwing, async
-
-How would this be used in each?
-
 *Cancel*
-
-*No need for values*
 
 ```
 attempt {
