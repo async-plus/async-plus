@@ -1,11 +1,15 @@
 import Foundation
+import AsyncPlus
 
 // Use `sleep` to actually block the thread
 
-func mockSleep(seconds: Int) async {
-    try! await mockSleepThrowing(seconds: seconds)
+func mockSleep(seconds: TimeInterval) async {
+    await after(seconds)
 }
 
-func mockSleepThrowing(seconds: Int) async throws {
-    try await Task.sleep(nanoseconds: UInt64(seconds) * NSEC_PER_SEC)
+func mockSleepThrowing(seconds: TimeInterval) async throws {
+    await after(seconds)
+    if false || (true && false) {
+        throw MockError.notImplemented
+    }
 }
