@@ -5,7 +5,7 @@ final class AsyncPlusTests: XCTestCase {
     
     func testChain1() throws {
         
-        let expectation = expectation(description: "")
+        let expectation1 = expectation(description: "")
         
         attempt {
             () -> Int in
@@ -16,7 +16,7 @@ final class AsyncPlusTests: XCTestCase {
             err in
             await mockSleep(seconds: 1)
             print("We recovered")
-            expectation.fulfill()
+            expectation1.fulfill()
             return 2
         }.catch {
             err in
@@ -29,7 +29,7 @@ final class AsyncPlusTests: XCTestCase {
     
     func testChain2() throws {
         
-        let expectation = expectation(description: "")
+        let expectation1 = expectation(description: "")
         
         attempt {
             () -> Int in
@@ -50,7 +50,7 @@ final class AsyncPlusTests: XCTestCase {
             err in
             XCTAssert(err as! MockError == MockError.notImplemented)
             try! await Task.sleep(nanoseconds: 1 * NSEC_PER_SEC)
-            expectation.fulfill()
+            expectation1.fulfill()
         }
         
         waitForExpectations(timeout: 4.1, handler: nil)
@@ -58,7 +58,8 @@ final class AsyncPlusTests: XCTestCase {
     
     func testDeferredChaining() throws {
         
-        let expectation = expectation(description: "")
+        let expectation1 = expectation(description: "")
+        let expectation2 = expectation(description: "")
         
         let firstBit = attempt {
             () -> Int in
@@ -82,10 +83,13 @@ final class AsyncPlusTests: XCTestCase {
         firstBit.then {
             str in
             XCTAssert(str == "Bob")
-            expectation.fulfill()
+            expectation1.fulfill()
         }.catch {
             err in
             print("This won't get here")
+        }.finally {
+            await mockSleep(seconds: 0.2)
+            expectation2.fulfill()
         }
         
         // Calls to `sleep` apparently pause the waitForExpectations timeout as well..

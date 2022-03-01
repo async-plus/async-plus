@@ -38,12 +38,7 @@ extension NodeFailableAsync where Stage == Thenable {
         return Promise<T>(Task.init {
             let result = await task.result
             body()
-            switch result {
-            case .success(let value):
-                return value
-            case .failure(let error):
-                throw error
-            }
+            return try result.get()
         })
     }
     
@@ -60,12 +55,7 @@ extension NodeFailableAsync where Stage: Caught {
         return CaughtPromise<T>(Task.init {
             let result = await task.result
             body()
-            switch result {
-            case .success(let value):
-                return value
-            case .failure(let error):
-                throw error
-            }
+            return try result.get()
         })
     }
     
@@ -79,10 +69,5 @@ extension NodeFailableAsync where Stage: Caught {
 private func ensureAsyncBody<T>(_ body: @escaping () async -> (), result: SimpleResult<T>) async throws -> T {
     
     await body()
-    switch result {
-    case .success(let value):
-        return value
-    case .failure(let error):
-        throw error
-    }
+    return try result.get()
 }
