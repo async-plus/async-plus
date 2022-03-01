@@ -45,10 +45,13 @@ final class AsyncPlusTests: XCTestCase {
             err in
             print("Error \(err)")
             try await mockSleepThrowing(seconds: 1)
+            print("Throwing notImplemented")
             throw MockError.notImplemented
         }.catch {
             err in
+            print("Catch run")
             XCTAssert(err as! MockError == MockError.notImplemented)
+            print("Type asserted")
             try! await Task.sleep(nanoseconds: 1 * NSEC_PER_SEC)
             expectation1.fulfill()
         }
@@ -63,7 +66,7 @@ final class AsyncPlusTests: XCTestCase {
         
         let firstBit = attempt {
             () -> Int in
-            try await mockSleepThrowing(seconds: 0.5)
+            try await mockSleepThrowing(seconds: 1)
             return 2
         }.then {
             v -> () in
@@ -71,7 +74,7 @@ final class AsyncPlusTests: XCTestCase {
         }.then {
             v -> String in
             XCTAssert(v == 2)
-            await mockSleep(seconds: 0.25)
+            await mockSleep(seconds: 1)
             return "Bob"
         }
         
@@ -88,11 +91,11 @@ final class AsyncPlusTests: XCTestCase {
             err in
             print("This won't get here")
         }.finally {
-            await mockSleep(seconds: 0.2)
+            await mockSleep(seconds: 1)
             expectation2.fulfill()
         }
         
         // Calls to `sleep` apparently pause the waitForExpectations timeout as well..
-        waitForExpectations(timeout: 1.0, handler: nil)
+        waitForExpectations(timeout: 3.1, handler: nil)
     }
 }

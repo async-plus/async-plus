@@ -4,7 +4,7 @@
   <a href="https://docs.asyncplus.codes/1.0/"><img src="https://img.shields.io/badge/read%20the-docs-blue" alt="Documentation"></a>
   <a href="https://discord.gg/vaAhGvvHpW"><img src="https://img.shields.io/discord/946863161460547684.svg" alt="Team Chat"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-brightgreen.svg" alt="MIT License"></a>
-  <a href="https://github.com/async-plus/async-plus/actions"><img src="https://github.com/vapor/vapor/workflows/test/badge.svg" alt="Continuous Integration"></a>
+  <a href="https://github.com/async-plus/async-plus/actions"><img src="https://github.com/async-plus/async-plus/workflows/test/badge.svg" alt="Continuous Integration"></a>
   <a href="https://swift.org"><img src="https://img.shields.io/badge/swift-5.5-brightgreen.svg" alt="Swift 5.5"></a>
   <a href="https://twitter.com/async_plus"><img src="https://img.shields.io/badge/twitter-async__plus-5AA9E7.svg" alt="Twitter"></a>
 </p>
