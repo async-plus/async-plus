@@ -1,115 +1,90 @@
-<a href="https://discord.gg/vaAhGvvHpW">![async+](Images/github-heading.png)</a>
+<a href="https://discord.gg/vaAhGvvHpW">![async+](Documentation/images/github-heading.png)</a>
 
 <p align="center">
-  <a href="https://docs.asyncplus.codes/1.0/"><img src="https://img.shields.io/badge/read%20the-docs-blue" alt="Documentation"></a>
+  <a href="https://docs.asyncplus.codes/0.1.2/"><img src="https://img.shields.io/badge/read%20the-docs-blue" alt="Documentation"></a>
   <a href="https://discord.gg/vaAhGvvHpW"><img src="https://img.shields.io/discord/946863161460547684.svg" alt="Team Chat"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-brightgreen.svg" alt="MIT License"></a>
   <a href="https://github.com/async-plus/async-plus/actions"><img src="https://github.com/async-plus/async-plus/workflows/test/badge.svg" alt="Continuous Integration"></a>
   <a href="https://swift.org"><img src="https://img.shields.io/badge/swift-5.5-brightgreen.svg" alt="Swift 5.5"></a>
   <a href="https://twitter.com/async_plus"><img src="https://img.shields.io/badge/twitter-async__plus-5AA9E7.svg" alt="Twitter"></a>
 </p>
-
 <br>
 
-Async/Await is the future of asynchronous coding (not promises, futures, or Rx). Missing a few patterns however. Most notably try/retry, chaining catch calls together.
+Async+ for Swift provides a simple **chainable interface** for your async and throwing code, similar to promises and futures.  Have the best of both worlds: you can use the async solution built into the language, but keep all the useful features of promises.
 
-## Example use cases:
-Layer catch behavior for later:
-    - Send to analytics
-        - Log
-        Recovery or plan B
+### ✏️  Usage
 
-- `async let value = attempt`: for parallel async code (you then call `let values = await [value, otherValue])`
-- `let value = await attempt`
-```
+Basic chaining operations are:
+
+* `.then` arranges blocks one after another, passing along any values
+
+* `.recover` recovers from a thrown error with a backup value (or block to run)
+* `.catch` catches any errors (and allows you to throw new ones for later catch blocks)
+* `attempt { ... }` kicks off a chain as in the example below:
+
+```swift
 attempt {
-    return await api.getPhoto()
+    return try await getThing()
 }.recover {
-    err in
-    return await cache.getPhoto()
-}.then {
-    photo in
-    try displayPhotoToUser(photo)
-}.catch {
-    err in 
-    self.alert(message: err.localizedDescription)
-}
-```
-Alternative to above:
-```
-let Result<photo> = attempt {
-    return await api.getPhoto()
-}.recover {
-    err in
-    return await cache.getPhoto()
-}.then {
-    photo in
-    try displayPhotoToUser(photo)
-}
-```
-
-
-## Future directions:
-
-*Cancel*
-
-```
-attempt {
-    await 
-}.recover {
-    // Try this thing
-}.attempt {
-    // No need to have a "done".
-}.catch(this error type) {
-    // Correct it here
-}.finally {
-    
-}
-```
-
-*Value initialization (whole chain is async)*
-```
-guard let v: Person? = await attempt {
-    return try await api.GetPerson()
-}.recover {
-    return try await localCache.GetPerson()
-}.catch {
     error in
-    logger.error("We could not get a person")
-} else {
-    
+    return try await backupGetThing(error)
+}.then {
+    thing in
+    await thing.doYour()
+}.catch {
+		error in
+    alert(error)
 }
 ```
 
+For comparison, if we tried to write the above flow without Async+ we'd get something like this:
 
-### Non-throwing, non-async context:
 
-No ability for throwing call or await. Need to first wrap:
+  ```swift
+  Task.init {
+      do {
+          let thing: Thing
+          do {
+              thing = try await getThing()
+          } catch {
+              thing = try await backupGetThing(error)
+          }
+          await thing.doYour()
+      } catch {
+          error in
+          alert(error)
+      }
+  }
+  // The do do problem ^
+  ```
 
-No value:
-attempt {
-    let x = await call()
-    try await anotherCall(x)
-}
+Async+ allows async and/or throwing code to remain unnested, modular, and concise.  For a full list of operations see the [documentation](https://docs.asyncplus.codes/0.1.2/).
 
-## Migrating from PromiseKit
-`firstly` -> `attempt`
-`then` -> `then` and `thenAttempt` (but it doesn't always need to return a value)
-`map` -> no need? But on the other hand if we are using $0 and wanting to not type annotate then you need it. However it could be the same as `then` just with a different overload for non-async.
-`compactMap` -> extension for optional "throwing if nil"
-`recover` -> `recover`. Needed.
-`get` -> `then` that doesn't return anything
-`tap` -> `tap`
-`ensure` -> `ensure`
-`done` -> `then` only needed if map is needed. Cannot call `asyncOptional` or `promise` on this.
-`catch` -> only needed for non-throwing contexts. Otherwise use `.asyncThrows()`.
-`finally` -> `finally`
+Want to still use chained code within a `do`/`catch` block, `Task.init`, or similar context? Easy: chains are fully interoperable with async and/or throwing contexts via the operations `.async()`, and `.asyncThrows()` at the end of the chain, for example:
 
-We add these new operations:
-`.catch()` with throwing body: this essentially just maps errors to one another.
-`.throws() throws`: TODO: If none of the code is async, then we could have a `.throws()` operator.
-`.async() async`: Can use on a guarantee (which is returned by a non-throwing `recover`). Can also use on a catch when the value type is (), as this is the same as a recover.
-`.asyncOptional()`: Async call that returns an optional value of the result.
-`.asyncResult()`: Async call that returns a Result
-`.asyncThrows()`: Async call that returns the value or throws.
+```
+let foo = await attempt{ ... }.then{ ... }.async() // non-throwing chain
+let foo = try await attempt{ ... }.then{ ... }.asyncThrows() // throwing chain
+```
+If the chain doesn't throw you will not be able to call `asyncThrows` on it (it is a `Guarantee<T>` type rather than a `Promise<T>` type), and vice versa.  Similarly, chains with potential for uncaught errors will raise an unused value warning at compilation time.
+
+### 💾  Installation
+
+Install the Async+ **SwiftPM** package in Xcode by going to `<your project> -> <ProjectName> -> Package Dependencies -> "+"` and entering: `https://github.com/async-plus/async-plus.git`
+
+Or modify your `Package.swift` file:
+
+```swift
+dependencies: [
+    .Package(url: "https://github.com/async-plus/async-plus.git", majorVersion: 0, minor: 1),
+] 
+```
+
+###  📘  Documentation
+
+Documentation is still in progress..
+
+### 🚀  Feedback and Contributing
+
+This package is in its initial release: please provide feedback and suggestions in order to help shape the API, either by submitting an [issue](https://github.com/async-plus/async-plus/issues/new) on Github or sending a message on [Discord](https://discord.gg/vaAhGvvHpW).
 
