@@ -116,4 +116,97 @@ final class AsyncPlusTests: XCTestCase {
         // Calls to `sleep` apparently pause the waitForExpectations timeout as well..
         waitForExpectations(timeout: 3.1, handler: nil)
     }
+    
+    func testWithSleep(sleepTime: UInt32) throws {
+        let expectation = expectation(description: "will run catch block")
+
+        let task = attempt {
+            print("TASK")
+            throw MockError.pandemic
+        }
+
+        sleep(sleepTime)
+
+        task.catch {
+            error in
+            print("CATCH")
+            print(error)
+            expectation.fulfill()
+        }
+        print("GOT TO CODE BELOW TASK")
+
+        waitForExpectations(timeout: 2, handler: nil)
+    }
+
+    // These are the difference between chaining beind done before execution, or execution being done before chaining
+    func testNoSleep() throws {
+        try testWithSleep(sleepTime: 0)
+    }
+
+    func testWithSleep() throws {
+        try testWithSleep(sleepTime: 2)
+    }
+
+    func testChain3() throws {
+
+        let expectation1 = expectation(description: "will run done block")
+        let expectation2 = expectation(description: "will run finally block")
+
+        attempt { () -> Int in
+            try await Task.sleep(nanoseconds: 1 * NSEC_PER_SEC)
+            return 32
+        }.then {
+            (num: Int) -> Int in
+            print("Should be 32:")
+            print(num)
+            XCTAssertEqual(num, 32)
+            return 5
+        }.then {
+            print("Should be 5:")
+            print($0)
+            XCTAssertEqual($0, 5)
+            expectation1.fulfill()
+        }.catch {
+            err in
+            print("Caught: \(err)")
+        }.finally {
+            print("Finally")
+            expectation2.fulfill()
+        }
+
+        waitForExpectations(timeout: 4, handler: nil)
+    }
+
+
+    func testChain4() throws {
+
+        let expectation1 = expectation(description: "will run catch block")
+        let expectation2 = expectation(description: "will run ensure block")
+        let expectation3 = expectation(description: "will run finally block")
+
+        attempt { () -> Int in
+            try await Task.sleep(nanoseconds: 1 * NSEC_PER_SEC)
+            return 32
+        }.then {
+            (num: Int) -> Int in
+            print("Should be 32:")
+            print(num)
+            return 5
+        }.then {
+            print("Should be 5:")
+            print($0)
+            expectation1.fulfill()
+        }.catch {
+            err in
+            print("Caught: \(err)")
+        }.ensure {
+            print("Ensure")
+            expectation2.fulfill()
+        }.finally {
+            print("Finally")
+            expectation3.fulfill()
+        }
+
+        waitForExpectations(timeout: 4, handler: nil)
+    }
 }
