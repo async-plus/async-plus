@@ -4,7 +4,7 @@ import Foundation
 
 extension NodeFailableInstant where Stage == Thenable {
     
-    func recover(_ body: (Error) -> T) -> ChainableValue<T> {
+    public func recover(_ body: (Error) -> T) -> ChainableValue<T> {
         switch result {
         case .success(let value):
             return ChainableValue(value)
@@ -13,7 +13,7 @@ extension NodeFailableInstant where Stage == Thenable {
         }
     }
 
-    func recover(_ body: (Error) throws -> T) -> ChainableResult<T> {
+    public func recover(_ body: (Error) throws -> T) -> ChainableResult<T> {
         switch result {
         case .success(let value):
             return ChainableResult(.success(value))
@@ -26,13 +26,13 @@ extension NodeFailableInstant where Stage == Thenable {
         }
     }
     
-    func recover(_ body: @escaping (Error) async -> T) -> Guarantee<T> {
+    public func recover(_ body: @escaping (Error) async -> T) -> Guarantee<T> {
         return Guarantee<T>(Task.init {
             await recoverAsyncBody(body, result: result)
         })
     }
     
-    func recover(_ body: @escaping (Error) async throws -> T) -> Promise<T> {
+    public func recover(_ body: @escaping (Error) async throws -> T) -> Promise<T> {
         return Promise<T>(Task.init {
             try await recoverAsyncThrowsBody(body, result: result)
         })
@@ -42,7 +42,7 @@ extension NodeFailableInstant where Stage == Thenable {
 extension NodeFailableAsync where Stage == Thenable {
     
     // These recover functions are async because the current result is already async.
-    func recover(_ body: @escaping (Error) -> T) -> Guarantee<T> {
+    public func recover(_ body: @escaping (Error) -> T) -> Guarantee<T> {
         return Guarantee<T>(Task.init {
             switch await task.result {
             case .success(let value):
@@ -53,7 +53,7 @@ extension NodeFailableAsync where Stage == Thenable {
         })
     }
     
-    func recover(_ body: @escaping (Error) throws -> T) -> Promise<T> {
+    public func recover(_ body: @escaping (Error) throws -> T) -> Promise<T> {
         return Promise<T>(Task.init {
             switch await task.result {
             case .success(let value):
@@ -64,13 +64,13 @@ extension NodeFailableAsync where Stage == Thenable {
         })
     }
     
-    func recover(_ body: @escaping (Error) async -> T) -> Guarantee<T> {
+    public func recover(_ body: @escaping (Error) async -> T) -> Guarantee<T> {
         return Guarantee<T>(Task.init {
             await recoverAsyncBody(body, result: await task.result)
         })
     }
     
-    func recover(_ body: @escaping (Error) async throws -> T) -> Promise<T> {
+    public func recover(_ body: @escaping (Error) async throws -> T) -> Promise<T> {
         return Promise<T>(Task.init {
             try await recoverAsyncThrowsBody(body, result: await task.result)
         })

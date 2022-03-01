@@ -1,5 +1,5 @@
 import Foundation
 
-typealias NonFailableTask<T> = Task<T, Never>
-typealias FailableTask<T> = Task<T, Error>
+public typealias NonFailableTask<T> = Task<T, Never>
+public typealias FailableTask<T> = Task<T, Error>
 

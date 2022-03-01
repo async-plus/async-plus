@@ -6,14 +6,14 @@ import Foundation
 extension NodeFailableInstant where Stage: Chainable {
 
     @discardableResult
-    func `catch`(_ body: (Error) -> ()) -> CaughtResult<T> {
+    public func `catch`(_ body: (Error) -> ()) -> CaughtResult<T> {
         if case .failure(let error) = result {
             body(error)
         }
         return CaughtResult(result)
     }
 
-    func `catch`(_ body: (Error) throws -> ()) -> PartiallyCaughtResult<T> {
+    public func `catch`(_ body: (Error) throws -> ()) -> PartiallyCaughtResult<T> {
         do {
             if case .failure(let error) = result {
                 try body(error)
@@ -25,13 +25,13 @@ extension NodeFailableInstant where Stage: Chainable {
     }
     
     @discardableResult
-    func `catch`(_ body: @escaping (Error) async -> ()) -> CaughtPromise<T> {
+    public func `catch`(_ body: @escaping (Error) async -> ()) -> CaughtPromise<T> {
         return CaughtPromise(Task.init {
             try await catchAsyncBody(body, result: result)
         })
     }
 
-    func `catch`(_ body: @escaping (Error) async throws -> ()) -> PartiallyCaughtPromise<T> {
+    public func `catch`(_ body: @escaping (Error) async throws -> ()) -> PartiallyCaughtPromise<T> {
         return PartiallyCaughtPromise(Task.init {
             try await catchAsyncThrowsBody(body, result: result)
         })
@@ -42,7 +42,7 @@ extension NodeFailableAsync where Stage: Chainable {
 
     // These catch functions are async because the current result is already async.
     @discardableResult
-    func `catch`(_ body: @escaping (Error) -> ()) -> CaughtPromise<T> {
+    public func `catch`(_ body: @escaping (Error) -> ()) -> CaughtPromise<T> {
         return CaughtPromise(Task.init {
             switch await task.result {
             case .success(let value):
@@ -54,7 +54,7 @@ extension NodeFailableAsync where Stage: Chainable {
         })
     }
 
-    func `catch`(_ body: @escaping (Error) throws -> ()) -> PartiallyCaughtPromise<T> {
+    public func `catch`(_ body: @escaping (Error) throws -> ()) -> PartiallyCaughtPromise<T> {
         return PartiallyCaughtPromise(Task.init {
             switch await task.result {
             case .success(let value):
@@ -67,13 +67,13 @@ extension NodeFailableAsync where Stage: Chainable {
     }
     
     @discardableResult
-    func `catch`(_ body: @escaping (Error) async -> ()) -> CaughtPromise<T> {
+    public func `catch`(_ body: @escaping (Error) async -> ()) -> CaughtPromise<T> {
         return CaughtPromise(Task.init {
             try await catchAsyncBody(body, result: await task.result)
         })
     }
 
-    func `catch`(_ body: @escaping (Error) async throws -> ()) -> PartiallyCaughtPromise<T> {
+    public func `catch`(_ body: @escaping (Error) async throws -> ()) -> PartiallyCaughtPromise<T> {
         return PartiallyCaughtPromise(Task.init {
             try await catchAsyncThrowsBody(body, result: await task.result)
         })

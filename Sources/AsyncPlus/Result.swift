@@ -1,4 +1,4 @@
 import Foundation
 
-typealias SimpleResult<Success> = Result<Success, Error>
+public typealias SimpleResult<Success> = Result<Success, Error>
 

@@ -1,11 +1,12 @@
 import Foundation
 
-struct CompactMapError: Error {
+public struct CompactMapError: Error {
+    public init() {}
 }
 
 extension Optional {
     
-    func unwrapOrThrow(_ error: Error = CompactMapError()) throws -> Wrapped {
+    public func unwrapOrThrow(_ error: Error = CompactMapError()) throws -> Wrapped {
         guard let result = self else {
             throw error
         }

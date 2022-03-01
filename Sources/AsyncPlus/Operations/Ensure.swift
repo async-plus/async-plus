@@ -6,12 +6,12 @@ import Foundation
 
 extension NodeFailableInstant where Stage == Thenable {
     
-    func ensure(_ body: () -> ()) -> ChainableResult<T> {
+    public func ensure(_ body: () -> ()) -> ChainableResult<T> {
         body()
         return ChainableResult<T>(result)
     }
     
-    func ensure(_ body: @escaping () async -> ()) -> Promise<T> {
+    public func ensure(_ body: @escaping () async -> ()) -> Promise<T> {
         return Promise(Task.init {
             return try await ensureAsyncBody(body, result: result)
         })
@@ -20,12 +20,12 @@ extension NodeFailableInstant where Stage == Thenable {
 
 extension NodeFailableInstant where Stage: Caught {
     
-    func ensure(_ body: () -> ()) -> CaughtResult<T> {
+    public func ensure(_ body: () -> ()) -> CaughtResult<T> {
         body()
         return CaughtResult<T>(result)
     }
     
-    func ensure(_ body: @escaping () async -> ()) -> CaughtPromise<T> {
+    public func ensure(_ body: @escaping () async -> ()) -> CaughtPromise<T> {
         return CaughtPromise(Task.init {
             return try await ensureAsyncBody(body, result: result)
         })
@@ -34,7 +34,7 @@ extension NodeFailableInstant where Stage: Caught {
 
 extension NodeFailableAsync where Stage == Thenable {
     
-    func ensure(_ body: @escaping () -> ()) -> Promise<T> {
+    public func ensure(_ body: @escaping () -> ()) -> Promise<T> {
         return Promise<T>(Task.init {
             let result = await task.result
             body()
@@ -42,7 +42,7 @@ extension NodeFailableAsync where Stage == Thenable {
         })
     }
     
-    func ensure(_ body: @escaping () async -> ()) -> Promise<T> {
+    public func ensure(_ body: @escaping () async -> ()) -> Promise<T> {
         return Promise(Task.init {
             return try await ensureAsyncBody(body, result: await task.result)
         })
@@ -51,7 +51,7 @@ extension NodeFailableAsync where Stage == Thenable {
 
 extension NodeFailableAsync where Stage: Caught {
     
-    func ensure(_ body: @escaping () -> ()) -> CaughtPromise<T> {
+    public func ensure(_ body: @escaping () -> ()) -> CaughtPromise<T> {
         return CaughtPromise<T>(Task.init {
             let result = await task.result
             body()
@@ -59,7 +59,7 @@ extension NodeFailableAsync where Stage: Caught {
         })
     }
     
-    func ensure(_ body: @escaping () async -> ()) -> CaughtPromise<T> {
+    public func ensure(_ body: @escaping () async -> ()) -> CaughtPromise<T> {
         return CaughtPromise(Task.init {
             return try await ensureAsyncBody(body, result: await task.result)
         })

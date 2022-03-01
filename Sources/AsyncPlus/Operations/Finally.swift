@@ -3,13 +3,13 @@ import Foundation
 extension NodeNonFailableInstant {
     
     @discardableResult
-    func finally(_ body: () -> ()) -> FinalizedValue<T> {
+    public func finally(_ body: () -> ()) -> FinalizedValue<T> {
         body()
         return FinalizedValue<T>(value)
     }
     
     @discardableResult
-    func finally(_ body: @escaping () async -> ()) -> FinalizedGuarantee<T> {
+    public func finally(_ body: @escaping () async -> ()) -> FinalizedGuarantee<T> {
         return FinalizedGuarantee<T>(Task.init {
             await body()
             return value
@@ -20,13 +20,13 @@ extension NodeNonFailableInstant {
 extension NodeFailableInstant where Stage == CompletelyCaught {
     
     @discardableResult
-    func finally(_ body: () -> ()) -> FinalizedResult<T> {
+    public func finally(_ body: () -> ()) -> FinalizedResult<T> {
         body()
         return FinalizedResult(result)
     }
     
     @discardableResult
-    func finally(_ body: @escaping () async -> ()) -> FinalizedPromise<T> {
+    public func finally(_ body: @escaping () async -> ()) -> FinalizedPromise<T> {
         return FinalizedPromise<T>(Task.init {
             await body()
             return try result.get()
@@ -37,7 +37,7 @@ extension NodeFailableInstant where Stage == CompletelyCaught {
 extension NodeNonFailableAsync {
     
     @discardableResult
-    func finally(_ body: @escaping () -> ()) -> FinalizedGuarantee<T> {
+    public func finally(_ body: @escaping () -> ()) -> FinalizedGuarantee<T> {
         return FinalizedGuarantee(Task.init {
             let value = await task.value
             body()
@@ -46,7 +46,7 @@ extension NodeNonFailableAsync {
     }
     
     @discardableResult
-    func finally(_ body: @escaping () async -> ()) -> FinalizedGuarantee<T> {
+    public func finally(_ body: @escaping () async -> ()) -> FinalizedGuarantee<T> {
         return FinalizedGuarantee(Task.init {
             let value = await task.value
             await body()
@@ -58,7 +58,7 @@ extension NodeNonFailableAsync {
 extension NodeFailableAsync where Stage == CompletelyCaught {
     
     @discardableResult
-    func finally(_ body: @escaping () -> ()) -> FinalizedPromise<T> {
+    public func finally(_ body: @escaping () -> ()) -> FinalizedPromise<T> {
         return FinalizedPromise(Task.init {
             let result = await task.result
             body()
@@ -67,7 +67,7 @@ extension NodeFailableAsync where Stage == CompletelyCaught {
     }
     
     @discardableResult
-    func finally(_ body: @escaping () async -> ()) -> FinalizedPromise<T> {
+    public func finally(_ body: @escaping () async -> ()) -> FinalizedPromise<T> {
         return FinalizedPromise(Task.init {
             let result = await task.result
             await body()
