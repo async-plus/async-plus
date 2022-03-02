@@ -1,24 +1,7 @@
 import Foundation
 import AppKit
 
-public protocol ChainItem {
-    associatedtype T
-}
-
-// Protocols for failability
-public protocol NonFailable: ChainItem {}
-public protocol Failable: ChainItem {}
-
-// Protocols for when results come
-public protocol Instant: ChainItem {}
-public protocol Async: ChainItem {}
-
-// Protocols for stages of chainability
-public protocol Chainable: ChainItem {}
-public protocol Thenable: Chainable {}
-public protocol Caught: Chainable {}
-
-public class AnyStageValue<T>: NonFailable, Instant {
+public class AnyStageValue<T> {
     
     public let value: T
     
@@ -27,7 +10,7 @@ public class AnyStageValue<T>: NonFailable, Instant {
     }
 }
 
-public class AnyStageResult<T>: Failable, Instant {
+public class AnyStageResult<T> {
     
     public let result: SimpleResult<T>
     
@@ -49,7 +32,7 @@ public class AnyStageResult<T>: Failable, Instant {
     }
 }
 
-public class AnyStageGuarantee<T>: NonFailable, Async {
+public class AnyStageGuarantee<T> {
     
     public let task: NonFailableTask<T>
     
@@ -62,7 +45,7 @@ public class AnyStageGuarantee<T>: NonFailable, Async {
     }
 }
 
-public class AnyStagePromise<T>: Failable, Async {
+public class AnyStagePromise<T> {
     
     public let task: FailableTask<T>
 
@@ -88,20 +71,20 @@ public class AnyStagePromise<T>: Failable, Async {
     }
 }
 
-public class ChainableValue<T>: AnyStageValue<T>, Chainable {}
-public class ChainableResult<T>: AnyStageResult<T>, Chainable {}
-public class ChainableGuarantee<T>: AnyStageGuarantee<T>, Chainable {}
-public class ChainablePromise<T>: AnyStagePromise<T>, Chainable {}
+public class ChainableValue<T>: AnyStageValue<T> {}
+public class ChainableResult<T>: AnyStageResult<T> {}
+public class ChainableGuarantee<T>: AnyStageGuarantee<T> {}
+public class ChainablePromise<T>: AnyStagePromise<T> {}
 
-public final class Value<T>: ChainableValue<T>, Thenable {}
-public final class APResult<T>: ChainableResult<T>, Thenable {}
-public final class Guarantee<T>: ChainableGuarantee<T>, Thenable {}
-public final class Promise<T>: ChainablePromise<T>, Thenable {}
+public final class Value<T>: ChainableValue<T> {}
+public final class APResult<T>: ChainableResult<T> {}
+public final class Guarantee<T>: ChainableGuarantee<T> {}
+public final class Promise<T>: ChainablePromise<T> {}
 
 public final class PartiallyCaughtResult<T> : ChainableResult<T> {}
-public final class CaughtResult<T> : ChainableResult<T>, Caught {}
+public final class CaughtResult<T> : ChainableResult<T> {}
 public final class PartiallyCaughtPromise<T> : ChainablePromise<T> {}
-public final class CaughtPromise<T> : ChainablePromise<T>, Caught {}
+public final class CaughtPromise<T> : ChainablePromise<T> {}
 
 public final class NonChainableValue<T> : AnyStageValue<T> {}
 public final class NonChainableResult<T> : AnyStageResult<T> {}
