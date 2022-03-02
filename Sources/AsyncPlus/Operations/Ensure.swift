@@ -4,7 +4,12 @@ import Foundation
 
 // Note: No `ensure` function is marked with @discardableResult because `finally` is the preferred way of ending the chain.
 
-// Must work for partially caught result, caught result, and thenable
+private func ensureAsyncBody<T>(_ body: @escaping () async -> (), result: SimpleResult<T>) async throws -> T {
+    
+    await body()
+    return try result.get()
+}
+
 extension ChainableResult {
     
     public func ensure(_ body: () -> ()) -> Self {
@@ -12,64 +17,69 @@ extension ChainableResult {
         return Self(result)
     }
     
-    public func ensure(_ body: @escaping () async -> ()) -> Self {
-        return Self(Task.init {
+    internal func ensureAsyncBodyWithResultType<PromiseType: AnyStagePromise<T>>(_ body: @escaping () async -> (), resultType: PromiseType.Type) -> PromiseType {
+        return PromiseType(Task.init {
             return try await ensureAsyncBody(body, result: result)
         })
     }
 }
 
-extension AnyResult where Self: Caught {
-    
-    // TODO: Bug: 
-    public func ensure(_ body: () -> ()) -> CaughtResult<T> {
-        body()
-        return CaughtResult<T>(result)
-    }
-    
-    public func ensure(_ body: @escaping () async -> ()) -> CaughtPromise<T> {
-        return CaughtPromise(Task.init {
-            return try await ensureAsyncBody(body, result: result)
-        })
-    }
-}
-
-extension AnyPromise where Self: Thenable {
-    
-    public func ensure(_ body: @escaping () -> ()) -> Promise<T> {
-        return Promise<T>(Task.init {
-            let result = await task.result
-            body()
-            return try result.get()
-        })
-    }
+extension APResult {
     
     public func ensure(_ body: @escaping () async -> ()) -> Promise<T> {
-        return Promise(Task.init {
-            return try await ensureAsyncBody(body, result: await task.result)
-        })
+        return ensureAsyncBodyWithResultType(body, resultType: Promise<T>.self)
     }
 }
 
-extension AnyPromise where Self: Caught {
+extension PartiallyCaughtResult {
     
-    public func ensure(_ body: @escaping () -> ()) -> CaughtPromise<T> {
-        return CaughtPromise<T>(Task.init {
+    public func ensure(_ body: @escaping () async -> ()) -> PartiallyCaughtPromise<T> {
+        return ensureAsyncBodyWithResultType(body, resultType: PartiallyCaughtPromise<T>.self)
+    }
+}
+
+extension CaughtResult {
+    
+    public func ensure(_ body: @escaping () async -> ()) -> CaughtPromise<T> {
+        return ensureAsyncBodyWithResultType(body, resultType: CaughtPromise<T>.self)
+    }
+}
+
+extension ChainablePromise {
+
+    public func ensure(_ body: @escaping () -> ()) -> Self {
+        return Self(Task.init {
             let result = await task.result
             body()
             return try result.get()
         })
     }
-    
-    public func ensure(_ body: @escaping () async -> ()) -> CaughtPromise<T> {
-        return CaughtPromise(Task.init {
-            return try await ensureAsyncBody(body, result: await task.result)
+
+    internal func ensureAsyncBodyWithResultType<PromiseType: AnyStagePromise<T>>(_ body: @escaping () async -> (), resultType: PromiseType.Type) -> PromiseType {
+        return PromiseType(Task.init {
+            let result = await self.task.result
+            return try await ensureAsyncBody(body, result: result)
         })
     }
 }
 
-private func ensureAsyncBody<T>(_ body: @escaping () async -> (), result: SimpleResult<T>) async throws -> T {
+extension Promise {
     
-    await body()
-    return try result.get()
+    public func ensure(_ body: @escaping () async -> ()) -> Promise<T> {
+        return ensureAsyncBodyWithResultType(body, resultType: Promise<T>.self)
+    }
+}
+
+extension PartiallyCaughtPromise {
+    
+    public func ensure(_ body: @escaping () async -> ()) -> PartiallyCaughtPromise<T> {
+        return ensureAsyncBodyWithResultType(body, resultType: PartiallyCaughtPromise<T>.self)
+    }
+}
+
+extension CaughtPromise {
+    
+    public func ensure(_ body: @escaping () async -> ()) -> CaughtPromise<T> {
+        return ensureAsyncBodyWithResultType(body, resultType: CaughtPromise<T>.self)
+    }
 }

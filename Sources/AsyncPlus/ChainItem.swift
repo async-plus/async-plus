@@ -5,19 +5,36 @@ public protocol ChainItem {
     associatedtype T
 }
 
+// Protocols for failability
 public protocol NonFailable: ChainItem {}
 public protocol Failable: ChainItem {}
+
+// Protocols for when results come
 public protocol Instant: ChainItem {}
 public protocol Async: ChainItem {}
 
-public protocol AnyValue: NonFailable, Instant {
-    var value: T { get }
+// Protocols for stages of chainability
+public protocol Chainable {}
+public protocol Thenable: Chainable {}
+public protocol Caught: Chainable {}
+
+public class AnyStageValue<T>: NonFailable, Instant {
+    
+    public let value: T
+    
+    public required init(_ value: T) {
+        self.value = value
+    }
 }
 
-public protocol AnyResult: Failable, Instant {
-    var result: SimpleResult<T> { get }
-}
-extension AnyResult {
+public class AnyStageResult<T>: Failable, Instant {
+    
+    public let result: SimpleResult<T>
+    
+    public required init(_ result: SimpleResult<T>) {
+        self.result = result
+    }
+    
     public func `throws`() throws -> T {
         return try result.get()
     }
@@ -27,19 +44,27 @@ extension AnyResult {
     }
 }
 
-public protocol AnyGuarantee: NonFailable, Async {
-    var task: NonFailableTask<T> { get }
-}
-extension AnyGuarantee {
+public class AnyStageGuarantee<T>: NonFailable, Async {
+    
+    public let task: NonFailableTask<T>
+    
+    public required init(_ task: NonFailableTask<T>) {
+        self.task = task
+    }
+    
     public func async() async -> T {
         return await task.value
     }
 }
 
-public protocol AnyPromise: Failable, Async {
-    var task: FailableTask<T> { get }
-}
-extension AnyPromise {
+public class AnyStagePromise<T>: Failable, Async {
+    
+    public let task: FailableTask<T>
+
+    public required init(_ task: FailableTask<T>) {
+        self.task = task
+    }
+    
     public func asyncThrows() async throws -> T {
         return try await task.value
     }
@@ -55,55 +80,6 @@ extension AnyPromise {
     
     public func asyncResult() async -> SimpleResult<T> {
         return await task.result
-    }
-}
-
-// Stages of chainability:
-public protocol Chainable {
-    
-}
-
-public protocol Thenable: Chainable {
-    
-}
-
-public protocol Caught: Chainable {
-    
-}
-
-public class AnyStageValue<T>: AnyValue {
-
-    public let value: T
-    
-    required init(_ value: T) {
-        self.value = value
-    }
-}
-
-public class AnyStageResult<T>: AnyResult {
-    
-    public let result: SimpleResult<T>
-    
-    required init(_ result: SimpleResult<T>) {
-        self.result = result
-    }
-}
-
-public class AnyStageGuarantee<T>: AnyGuarantee {
-    
-    public let task: NonFailableTask<T>
-    
-    required init(_ task: NonFailableTask<T>) {
-        self.task = task
-    }
-}
-
-public class AnyStagePromise<T>: AnyPromise {
-    
-    public let task: FailableTask<T>
-
-    required init(_ task: FailableTask<T>) {
-        self.task = task
     }
 }
 

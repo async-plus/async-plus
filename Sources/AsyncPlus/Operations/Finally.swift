@@ -1,6 +1,6 @@
 import Foundation
 
-extension AnyValue {
+extension ChainableValue {
     
     @discardableResult
     public func finally(_ body: () -> ()) -> NonChainableValue<T> {
@@ -17,7 +17,7 @@ extension AnyValue {
     }
 }
 
-extension AnyResult where Self: CompletelyCaught {
+extension CaughtResult {
     
     @discardableResult
     public func finally(_ body: () -> ()) -> NonChainableResult<T> {
@@ -34,7 +34,7 @@ extension AnyResult where Self: CompletelyCaught {
     }
 }
 
-extension AnyGuarantee {
+extension ChainableGuarantee {
     
     @discardableResult
     public func finally(_ body: @escaping () -> ()) -> NonChainableGuarantee<T> {
@@ -55,7 +55,7 @@ extension AnyGuarantee {
     }
 }
 
-extension AnyPromise where Self: CompletelyCaught {
+extension CaughtPromise {
     
     @discardableResult
     public func finally(_ body: @escaping () -> ()) -> NonChainablePromise<T> {

@@ -2,7 +2,7 @@ import Foundation
 
 // Note: When you are using recover and T is void or (), then either 1) You are intending to stack on further operations after the correction, or 2) you could have used `catch`. For this reason, there are no @discardableResult recover functions. For this use case, catch should be used.
 
-extension AnyResult where Self: Thenable {
+extension APResult {
     
     public func recover(_ body: (Error) -> T) -> ChainableValue<T> {
         switch result {
@@ -39,7 +39,7 @@ extension AnyResult where Self: Thenable {
     }
 }
 
-extension AnyPromise where Stage == Thenable {
+extension Promise {
     
     // These recover functions are async because the current result is already async.
     public func recover(_ body: @escaping (Error) -> T) -> Guarantee<T> {

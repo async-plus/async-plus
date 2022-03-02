@@ -3,6 +3,26 @@ import Foundation
 
 // Note: Catch operations with bodies that are non-throwing are marked with @discardableResult, because all errors are presumably handled. However, if a catch has a throwing body, then an error could still arise. This can be handled with a call to .throws() to progagate the error, or chained with another `catch` operation with a non-throwing body.
 
+private func catchAsyncBody<T>(_ body: @escaping (Error) async -> (), result: SimpleResult<T>) async throws -> T {
+    switch result {
+    case .success(let value):
+        return value
+    case .failure(let error):
+        await body(error)
+        throw error
+    }
+}
+
+private func catchAsyncThrowsBody<T>(_ body: @escaping (Error) async throws -> (), result: SimpleResult<T>) async throws -> T {
+    switch result {
+    case .success(let value):
+        return value
+    case .failure(let error):
+        try await body(error)
+        throw error
+    }
+}
+
 extension ChainableResult {
 
     @discardableResult
@@ -79,24 +99,3 @@ extension ChainablePromise {
         })
     }
 }
-
-private func catchAsyncBody<T>(_ body: @escaping (Error) async -> (), result: SimpleResult<T>) async throws -> T {
-    switch result {
-    case .success(let value):
-        return value
-    case .failure(let error):
-        await body(error)
-        throw error
-    }
-}
-
-private func catchAsyncThrowsBody<T>(_ body: @escaping (Error) async throws -> (), result: SimpleResult<T>) async throws -> T {
-    switch result {
-    case .success(let value):
-        return value
-    case .failure(let error):
-        try await body(error)
-        throw error
-    }
-}
-
