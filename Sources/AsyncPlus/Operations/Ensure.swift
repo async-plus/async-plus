@@ -4,22 +4,24 @@ import Foundation
 
 // Note: No `ensure` function is marked with @discardableResult because `finally` is the preferred way of ending the chain.
 
-extension NodeFailableInstant where Stage == Thenable {
+// Must work for partially caught result, caught result, and thenable
+extension ChainableResult {
     
-    public func ensure(_ body: () -> ()) -> ChainableResult<T> {
+    public func ensure(_ body: () -> ()) -> Self {
         body()
-        return ChainableResult<T>(result)
+        return Self(result)
     }
     
-    public func ensure(_ body: @escaping () async -> ()) -> Promise<T> {
-        return Promise(Task.init {
+    public func ensure(_ body: @escaping () async -> ()) -> Self {
+        return Self(Task.init {
             return try await ensureAsyncBody(body, result: result)
         })
     }
 }
 
-extension NodeFailableInstant where Stage: Caught {
+extension AnyResult where Self: Caught {
     
+    // TODO: Bug: 
     public func ensure(_ body: () -> ()) -> CaughtResult<T> {
         body()
         return CaughtResult<T>(result)
@@ -32,7 +34,7 @@ extension NodeFailableInstant where Stage: Caught {
     }
 }
 
-extension NodeFailableAsync where Stage == Thenable {
+extension AnyPromise where Self: Thenable {
     
     public func ensure(_ body: @escaping () -> ()) -> Promise<T> {
         return Promise<T>(Task.init {
@@ -49,7 +51,7 @@ extension NodeFailableAsync where Stage == Thenable {
     }
 }
 
-extension NodeFailableAsync where Stage: Caught {
+extension AnyPromise where Self: Caught {
     
     public func ensure(_ body: @escaping () -> ()) -> CaughtPromise<T> {
         return CaughtPromise<T>(Task.init {

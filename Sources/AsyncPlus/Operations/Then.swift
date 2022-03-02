@@ -2,7 +2,7 @@ import Foundation
 
 // Note: For @discardableResult we require return type to be () or void. Otherwise, the operation produces a result which implies the result should be used in some kind of chained call.
 
-extension NodeNonFailableInstant where Stage == Thenable {
+extension AnyValue where Stage == Thenable {
     
     public func then<U>(_ body: (T) -> U) -> ChainableValue<U> {
         return ChainableValue(body(value))
@@ -59,7 +59,7 @@ extension NodeNonFailableInstant where Stage == Thenable {
     }
 }
 
-extension NodeFailableInstant where Stage == Thenable {
+extension AnyResult where Stage == Thenable {
     
     public func then<U>(_ body: (T) -> U) -> ChainableResult<U> {
         switch result {
@@ -154,7 +154,7 @@ extension NodeFailableInstant where Stage == Thenable {
     }
 }
 
-extension NodeNonFailableAsync where Stage == Thenable {
+extension AnyGuarantee where Stage == Thenable {
     
     public func then<U>(_ body: @escaping (T) -> U) -> Guarantee<U> {
         return Guarantee<U>(Task.init {
@@ -215,7 +215,7 @@ extension NodeNonFailableAsync where Stage == Thenable {
     }
 }
 
-extension NodeFailableAsync where Stage == Thenable {
+extension AnyPromise where Stage == Thenable {
     
     public func then<U>(_ body: @escaping (T) -> U) -> Promise<U> {
         return Promise<U>(Task.init {

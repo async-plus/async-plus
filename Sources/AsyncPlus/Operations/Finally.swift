@@ -1,44 +1,44 @@
 import Foundation
 
-extension NodeNonFailableInstant {
+extension AnyValue {
     
     @discardableResult
-    public func finally(_ body: () -> ()) -> FinalizedValue<T> {
+    public func finally(_ body: () -> ()) -> NonChainableValue<T> {
         body()
-        return FinalizedValue<T>(value)
+        return NonChainableValue<T>(value)
     }
     
     @discardableResult
-    public func finally(_ body: @escaping () async -> ()) -> FinalizedGuarantee<T> {
-        return FinalizedGuarantee<T>(Task.init {
+    public func finally(_ body: @escaping () async -> ()) -> NonChainableGuarantee<T> {
+        return NonChainableGuarantee<T>(Task.init {
             await body()
             return value
         })
     }
 }
 
-extension NodeFailableInstant where Stage == CompletelyCaught {
+extension AnyResult where Self: CompletelyCaught {
     
     @discardableResult
-    public func finally(_ body: () -> ()) -> FinalizedResult<T> {
+    public func finally(_ body: () -> ()) -> NonChainableResult<T> {
         body()
-        return FinalizedResult(result)
+        return NonChainableResult(result)
     }
     
     @discardableResult
-    public func finally(_ body: @escaping () async -> ()) -> FinalizedPromise<T> {
-        return FinalizedPromise<T>(Task.init {
+    public func finally(_ body: @escaping () async -> ()) -> NonChainablePromise<T> {
+        return NonChainablePromise<T>(Task.init {
             await body()
             return try result.get()
         })
     }
 }
 
-extension NodeNonFailableAsync {
+extension AnyGuarantee {
     
     @discardableResult
-    public func finally(_ body: @escaping () -> ()) -> FinalizedGuarantee<T> {
-        return FinalizedGuarantee(Task.init {
+    public func finally(_ body: @escaping () -> ()) -> NonChainableGuarantee<T> {
+        return NonChainableGuarantee(Task.init {
             let value = await task.value
             body()
             return value
@@ -46,8 +46,8 @@ extension NodeNonFailableAsync {
     }
     
     @discardableResult
-    public func finally(_ body: @escaping () async -> ()) -> FinalizedGuarantee<T> {
-        return FinalizedGuarantee(Task.init {
+    public func finally(_ body: @escaping () async -> ()) -> NonChainableGuarantee<T> {
+        return NonChainableGuarantee(Task.init {
             let value = await task.value
             await body()
             return value
@@ -55,11 +55,11 @@ extension NodeNonFailableAsync {
     }
 }
 
-extension NodeFailableAsync where Stage == CompletelyCaught {
+extension AnyPromise where Self: CompletelyCaught {
     
     @discardableResult
-    public func finally(_ body: @escaping () -> ()) -> FinalizedPromise<T> {
-        return FinalizedPromise(Task.init {
+    public func finally(_ body: @escaping () -> ()) -> NonChainablePromise<T> {
+        return NonChainablePromise(Task.init {
             let result = await task.result
             body()
             return try result.get()
@@ -67,8 +67,8 @@ extension NodeFailableAsync where Stage == CompletelyCaught {
     }
     
     @discardableResult
-    public func finally(_ body: @escaping () async -> ()) -> FinalizedPromise<T> {
-        return FinalizedPromise(Task.init {
+    public func finally(_ body: @escaping () async -> ()) -> NonChainablePromise<T> {
+        return NonChainablePromise(Task.init {
             let result = await task.result
             await body()
             return try result.get()
