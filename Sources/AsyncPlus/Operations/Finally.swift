@@ -1,6 +1,6 @@
 import Foundation
 
-extension ChainableValue {
+extension Value {
     
     @discardableResult
     public func finally(_ body: () -> ()) -> NonChainableValue<T> {
@@ -34,7 +34,7 @@ extension CaughtResult {
     }
 }
 
-extension ChainableGuarantee {
+extension Guarantee {
     
     @discardableResult
     public func finally(_ body: @escaping () -> ()) -> NonChainableGuarantee<T> {

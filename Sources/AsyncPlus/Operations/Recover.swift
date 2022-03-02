@@ -4,24 +4,24 @@ import Foundation
 
 extension APResult {
     
-    public func recover(_ body: (Error) -> T) -> ChainableValue<T> {
+    public func recover(_ body: (Error) -> T) -> Value<T> {
         switch result {
         case .success(let value):
-            return ChainableValue(value)
+            return Value(value)
         case .failure(let error):
-            return ChainableValue(body(error))
+            return Value(body(error))
         }
     }
 
-    public func recover(_ body: (Error) throws -> T) -> ChainableResult<T> {
+    public func recover(_ body: (Error) throws -> T) -> APResult<T> {
         switch result {
         case .success(let value):
-            return ChainableResult(.success(value))
+            return APResult(.success(value))
         case .failure(let errorOriginal):
             do {
-                return ChainableResult(.success(try body(errorOriginal)))
+                return APResult(.success(try body(errorOriginal)))
             } catch {
-                return ChainableResult(.failure(error))
+                return APResult(.failure(error))
             }
         }
     }

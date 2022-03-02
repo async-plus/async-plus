@@ -4,30 +4,30 @@ import Foundation
 
 extension Value {
     
-    public func then<U>(_ body: (T) -> U) -> ChainableValue<U> {
-        return ChainableValue(body(value))
+    public func then<U>(_ body: (T) -> U) -> Value<U> {
+        return Value<U>(body(value))
     }
     
     @discardableResult
-    public func then(_ body: (T) -> ()) -> ChainableValue<T> {
+    public func then(_ body: (T) -> ()) -> Value<T> {
         body(value)
-        return ChainableValue(value)
+        return Value<T>(value)
     }
     
-    public func then<U>(_ body: (T) throws -> U) -> ChainableResult<U> {
+    public func then<U>(_ body: (T) throws -> U) -> APResult<U> {
         do {
-            return ChainableResult(.success(try body(value)))
+            return APResult(.success(try body(value)))
         } catch {
-            return ChainableResult(.failure(error))
+            return APResult(.failure(error))
         }
     }
     
-    public func then(_ body: (T) throws -> ()) -> ChainableResult<T> {
+    public func then(_ body: (T) throws -> ()) -> APResult<T> {
         do {
             try body(value)
-            return ChainableResult(.success(value))
+            return APResult(.success(value))
         } catch {
-            return ChainableResult(.failure(error))
+            return APResult(.failure(error))
         }
     }
     
@@ -61,49 +61,49 @@ extension Value {
 
 extension APResult {
     
-    public func then<U>(_ body: (T) -> U) -> ChainableResult<U> {
+    public func then<U>(_ body: (T) -> U) -> APResult<U> {
         switch result {
         case .success(let value):
-            return ChainableResult(.success(body(value)))
+            return APResult<U>(.success(body(value)))
         case .failure(let error):
-            return ChainableResult(.failure(error))
+            return APResult<U>(.failure(error))
         }
     }
     
-    public func then(_ body: (T) -> ()) -> ChainableResult<T> {
+    public func then(_ body: (T) -> ()) -> APResult<T> {
         switch result {
         case .success(let value):
             body(value)
-            return ChainableResult(.success(value))
+            return APResult(.success(value))
         case .failure(let error):
-            return ChainableResult(.failure(error))
+            return APResult(.failure(error))
         }
     }
 
-    public func then<U>(_ body: (T) throws -> U) -> ChainableResult<U> {
+    public func then<U>(_ body: (T) throws -> U) -> APResult<U> {
         switch result {
         case .success(let value):
             do {
-                return ChainableResult(.success(try body(value)))
+                return APResult<U>(.success(try body(value)))
             } catch {
-                return ChainableResult(.failure(error))
+                return APResult<U>(.failure(error))
             }
         case .failure(let error):
-            return ChainableResult(.failure(error))
+            return APResult<U>(.failure(error))
         }
     }
     
-    public func then(_ body: (T) throws -> ()) -> ChainableResult<T> {
+    public func then(_ body: (T) throws -> ()) -> APResult<T> {
         switch result {
         case .success(let value):
             do {
                 try body(value)
-                return ChainableResult(.success(value))
+                return APResult(.success(value))
             } catch {
-                return ChainableResult(.failure(error))
+                return APResult(.failure(error))
             }
         case .failure(let error):
-            return ChainableResult(.failure(error))
+            return APResult(.failure(error))
         }
     }
     

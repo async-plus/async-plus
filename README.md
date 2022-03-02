@@ -83,8 +83,6 @@ To use Async+ in a Swift file you must add `import AsyncPlus` to the top of the 
 
 ###  📘  Documentation
 
-[Index](Documentation/index.md)
-
 [Getting Started](Documentation/getting-started.md)
 
 [Operations](Documentation/operations.md)

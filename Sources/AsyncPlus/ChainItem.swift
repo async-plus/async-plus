@@ -14,7 +14,7 @@ public protocol Instant: ChainItem {}
 public protocol Async: ChainItem {}
 
 // Protocols for stages of chainability
-public protocol Chainable {}
+public protocol Chainable: ChainItem {}
 public protocol Thenable: Chainable {}
 public protocol Caught: Chainable {}
 
@@ -40,7 +40,12 @@ public class AnyStageResult<T>: Failable, Instant {
     }
     
     public func optional() -> T? {
-        return result.optional()
+        switch result {
+        case .success(let value):
+            return value
+        case .failure(_):
+            return nil
+        }
     }
 }
 

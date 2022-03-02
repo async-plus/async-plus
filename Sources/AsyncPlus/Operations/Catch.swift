@@ -3,6 +3,8 @@ import Foundation
 
 // Note: Catch operations with bodies that are non-throwing are marked with @discardableResult, because all errors are presumably handled. However, if a catch has a throwing body, then an error could still arise. This can be handled with a call to .throws() to progagate the error, or chained with another `catch` operation with a non-throwing body.
 
+// Why is there no catchable protocol? Because in an instantaneous context the body is sometimes non-escaping, so there is no common interface besides the async functions.
+
 private func catchAsyncBody<T>(_ body: @escaping (Error) async -> (), result: SimpleResult<T>) async throws -> T {
     switch result {
     case .success(let value):
@@ -23,6 +25,7 @@ private func catchAsyncThrowsBody<T>(_ body: @escaping (Error) async throws -> (
     }
 }
 
+typealias CatchableResult = ChainableResult
 extension ChainableResult {
 
     @discardableResult
@@ -58,6 +61,7 @@ extension ChainableResult {
     }
 }
 
+typealias CatchablePromise = ChainablePromise
 extension ChainablePromise {
 
     // These catch functions are async because the current result is already async.

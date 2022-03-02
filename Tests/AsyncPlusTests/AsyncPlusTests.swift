@@ -19,9 +19,9 @@ final class AsyncPlusTests: XCTestCase {
             expectation1.fulfill()
             return 2
         }.catch {
+            // It would be great if we could get this catch statement to trigger a compilation error, but the compiler treats the block above as throwing instead.
             err in
-            try! await mockSleepThrowing(seconds: 1)
-            print("Error \(err)")
+            print("ERROR")
         }
         
         waitForExpectations(timeout: 3, handler: nil)
