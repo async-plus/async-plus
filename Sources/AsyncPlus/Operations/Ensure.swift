@@ -20,13 +20,13 @@ extension NodeFailableInstant where Stage == Thenable {
 
 extension NodeFailableInstant where Stage: Caught {
     
-    public func ensure(_ body: () -> ()) -> CaughtResult<T> {
+    public func ensure(_ body: () -> ()) -> GenericNodeFailableInstant<T, Stage> {
         body()
-        return CaughtResult<T>(result)
+        return GenericNodeFailableInstant<T, Stage>(result)
     }
     
-    public func ensure(_ body: @escaping () async -> ()) -> CaughtPromise<T> {
-        return CaughtPromise(Task.init {
+    public func ensure(_ body: @escaping () async -> ()) -> GenericNodeFailableAsync<T, Stage> {
+        return GenericNodeFailableAsync<T, Stage>(Task.init {
             return try await ensureAsyncBody(body, result: result)
         })
     }
@@ -51,16 +51,16 @@ extension NodeFailableAsync where Stage == Thenable {
 
 extension NodeFailableAsync where Stage: Caught {
     
-    public func ensure(_ body: @escaping () -> ()) -> CaughtPromise<T> {
-        return CaughtPromise<T>(Task.init {
+    public func ensure(_ body: @escaping () -> ()) -> GenericNodeFailableAsync<T, Stage> {
+        return GenericNodeFailableAsync<T, Stage>(Task.init {
             let result = await task.result
             body()
             return try result.get()
         })
     }
     
-    public func ensure(_ body: @escaping () async -> ()) -> CaughtPromise<T> {
-        return CaughtPromise(Task.init {
+    public func ensure(_ body: @escaping () async -> ()) -> GenericNodeFailableAsync<T, Stage> {
+        return GenericNodeFailableAsync<T, Stage>(Task.init {
             return try await ensureAsyncBody(body, result: await task.result)
         })
     }
