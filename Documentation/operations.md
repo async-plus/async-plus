@@ -3,7 +3,7 @@
 Following is a full list of supported chaining operations in Async+:
 
 **attempt**
-Use `attempt` to start a chain of commands. The provided body will begin running immediately. The return type will be a `Value`, `APResult`, `Guarantee`, or `Promise` depending on the async/throwing status of the body closure.
+Use `attempt` to start a chain of commands. The provided body will begin running immediately. The return type will be a `Value`, `Result` (`AsyncPlus.Result`), `Guarantee`, or `Promise` depending on the async/throwing status of the body closure.
 
 ```swift
 attempt {
@@ -36,7 +36,7 @@ The provided closure to recover recieves any errors, and can attempt to provide 
 
 Example using `attempt`, `then`, and `recover`:
 ```swift
-let Result<photo> = attempt {
+let photo = try await attempt {
     return await api.getPhoto()
 }.recover {
     err in
@@ -44,7 +44,7 @@ let Result<photo> = attempt {
 }.then {
     photo in
     try displayPhotoToUser(photo)
-}
+}.asyncThrows()
 ```
 
 **ensure**

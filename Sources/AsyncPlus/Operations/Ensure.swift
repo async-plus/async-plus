@@ -24,7 +24,7 @@ extension ChainableResult {
     }
 }
 
-extension APResult {
+extension Result {
     
     public func ensure(_ body: @escaping () async -> ()) -> Promise<T> {
         return ensureAsyncBodyWithResultType(body, resultType: Promise<T>.self)

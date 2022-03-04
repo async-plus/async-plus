@@ -5,11 +5,11 @@ public func attempt<T>(_ body: () -> T) -> Value<T> {
     return Value(body())
 }
 
-public func attempt<T>(_ body: () throws -> T) -> APResult<T> {
+public func attempt<T>(_ body: () throws -> T) -> Result<T> {
     do {
-        return APResult(.success(try body()))
+        return Result(.success(try body()))
     } catch {
-        return APResult(.failure(error))
+        return Result(.failure(error))
     }
 }
 

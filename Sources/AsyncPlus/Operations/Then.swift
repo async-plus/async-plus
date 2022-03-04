@@ -14,20 +14,20 @@ extension Value {
         return Value<T>(value)
     }
     
-    public func then<U>(_ body: (T) throws -> U) -> APResult<U> {
+    public func then<U>(_ body: (T) throws -> U) -> Result<U> {
         do {
-            return APResult(.success(try body(value)))
+            return Result(.success(try body(value)))
         } catch {
-            return APResult(.failure(error))
+            return Result(.failure(error))
         }
     }
     
-    public func then(_ body: (T) throws -> ()) -> APResult<T> {
+    public func then(_ body: (T) throws -> ()) -> Result<T> {
         do {
             try body(value)
-            return APResult(.success(value))
+            return Result(.success(value))
         } catch {
-            return APResult(.failure(error))
+            return Result(.failure(error))
         }
     }
     
@@ -59,51 +59,51 @@ extension Value {
     }
 }
 
-extension APResult {
+extension Result {
     
-    public func then<U>(_ body: (T) -> U) -> APResult<U> {
+    public func then<U>(_ body: (T) -> U) -> Result<U> {
         switch result {
         case .success(let value):
-            return APResult<U>(.success(body(value)))
+            return Result<U>(.success(body(value)))
         case .failure(let error):
-            return APResult<U>(.failure(error))
+            return Result<U>(.failure(error))
         }
     }
     
-    public func then(_ body: (T) -> ()) -> APResult<T> {
+    public func then(_ body: (T) -> ()) -> Result<T> {
         switch result {
         case .success(let value):
             body(value)
-            return APResult(.success(value))
+            return Result(.success(value))
         case .failure(let error):
-            return APResult(.failure(error))
+            return Result(.failure(error))
         }
     }
 
-    public func then<U>(_ body: (T) throws -> U) -> APResult<U> {
+    public func then<U>(_ body: (T) throws -> U) -> Result<U> {
         switch result {
         case .success(let value):
             do {
-                return APResult<U>(.success(try body(value)))
+                return Result<U>(.success(try body(value)))
             } catch {
-                return APResult<U>(.failure(error))
+                return Result<U>(.failure(error))
             }
         case .failure(let error):
-            return APResult<U>(.failure(error))
+            return Result<U>(.failure(error))
         }
     }
     
-    public func then(_ body: (T) throws -> ()) -> APResult<T> {
+    public func then(_ body: (T) throws -> ()) -> Result<T> {
         switch result {
         case .success(let value):
             do {
                 try body(value)
-                return APResult(.success(value))
+                return Result(.success(value))
             } catch {
-                return APResult(.failure(error))
+                return Result(.failure(error))
             }
         case .failure(let error):
-            return APResult(.failure(error))
+            return Result(.failure(error))
         }
     }
     

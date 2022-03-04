@@ -2,7 +2,7 @@ import Foundation
 
 // Note: When you are using recover and T is void or (), then either 1) You are intending to stack on further operations after the correction, or 2) you could have used `catch`. For this reason, there are no @discardableResult recover functions. For this use case, catch should be used.
 
-extension APResult {
+extension Result {
     
     public func recover(_ body: (Error) -> T) -> Value<T> {
         switch result {
@@ -13,15 +13,15 @@ extension APResult {
         }
     }
 
-    public func recover(_ body: (Error) throws -> T) -> APResult<T> {
+    public func recover(_ body: (Error) throws -> T) -> Result<T> {
         switch result {
         case .success(let value):
-            return APResult(.success(value))
+            return Result(.success(value))
         case .failure(let errorOriginal):
             do {
-                return APResult(.success(try body(errorOriginal)))
+                return Result(.success(try body(errorOriginal)))
             } catch {
-                return APResult(.failure(error))
+                return Result(.failure(error))
             }
         }
     }

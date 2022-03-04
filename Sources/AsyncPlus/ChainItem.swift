@@ -77,7 +77,7 @@ public class ChainableGuarantee<T>: AnyStageGuarantee<T> {}
 public class ChainablePromise<T>: AnyStagePromise<T> {}
 
 public final class Value<T>: ChainableValue<T> {}
-public final class APResult<T>: ChainableResult<T> {}
+public final class Result<T>: ChainableResult<T> {}
 public final class Guarantee<T>: ChainableGuarantee<T> {}
 public final class Promise<T>: ChainablePromise<T> {}
 
