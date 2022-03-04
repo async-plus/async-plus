@@ -6,3 +6,5 @@ enum MockError: Error {
     case noInternet
     case notImplemented
 }
+
+

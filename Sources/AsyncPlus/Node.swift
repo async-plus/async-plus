@@ -7,118 +7,124 @@ public protocol Node {
     associatedtype When: WhenFlag
     associatedtype Stage: StageFlag
 }
+//
+//public protocol AnyStageValueP: Node where Fails == NonFailableFlag, When == InstantFlag {
+//    var value: T { get }
+//
+//}
 
-public protocol NonFailable: Node where Fails == NonFailableFlag {}
-public protocol Failable: Node where Fails == FailableFlag {}
-public protocol Instant: Node where When == InstantFlag {}
-public protocol Async: Node where When == AsyncFlag {}
+//public protocol AnyStageResultP: Node where Fails == FailableFlag, When == InstantFlag {
+//    var result: SimpleResult<T> { get }
+//
+//}
+//extension AnyStageResultP {
+//    public func `throws`() throws -> T {
+//        switch result {
+//        case .success(let value):
+//            return value
+//        case .failure(let error):
+//            throw error
+//        }
+//    }
+//
+//    public func optional() -> T? {
+//        switch result {
+//        case .success(let value):
+//            return value
+//        case .failure(_):
+//            return nil
+//        }
+//    }
+//}
 
-public protocol AnyStageValue: NonFailable, Instant {
-    var value: T { get }
-}
+//public protocol AnyStageGuaranteeP: Node where Fails == NonFailableFlag, When == AsyncFlag {
+//    var task: NonFailableTask<T> { get }
+//
+//
+//}
+//extension AnyStageGuaranteeP {
+//    public func async() async -> T {
+//        return await task.value
+//    }
+//}
 
-public protocol AnyStageResult: Failable, Instant {
-    var result: SimpleResult<T> { get }
-}
-extension AnyStageResult {
-    public func `throws`() throws -> T {
-        switch result {
-        case .success(let value):
-            return value
-        case .failure(let error):
-            throw error
-        }
-    }
+//public protocol AnyStagePromiseP: Node where Fails == FailableFlag, When == AsyncFlag {
+//    var taskFailable: FailableTask<T>! { get }
+//}
+//extension AnyStagePromiseP {
+//    public func asyncThrows() async throws -> T {
+//        return try await taskFailable.value
+//    }
+//
+//    public func asyncOptional() async -> T? {
+//        switch await taskFailable.result {
+//        case .success(let value):
+//            return value
+//        case .failure(_):
+//            return nil
+//        }
+//    }
+//
+//    public func asyncResult() async -> SimpleResult<T> {
+//        return await taskFailable.result
+//    }
+//}
+
+public final class GenericNode<T, Fails: IsFailableFlag, When: WhenFlag, Stage: StageFlag>: Node {
     
-    public func optional() -> T? {
-        switch result {
-        case .success(let value):
-            return value
-        case .failure(_):
-            return nil
-        }
-    }
-}
-
-public protocol AnyStageGuarantee: NonFailable, Async {
-    var task: NonFailableTask<T> { get }
-}
-extension AnyStageGuarantee {
-    public func async() async -> T {
-        return await task.value
-    }
-}
-
-public protocol AnyStagePromise: Failable, Async {
-    var task: FailableTask<T> { get }
-}
-extension AnyStagePromise {
-    public func asyncThrows() async throws -> T {
-        return try await task.value
-    }
-    
-    public func asyncOptional() async -> T? {
-        switch await task.result {
-        case .success(let value):
-            return value
-        case .failure(_):
-            return nil
-        }
-    }
-    
-    public func asyncResult() async -> SimpleResult<T> {
-        return await task.result
-    }
-}
-
-public final class GenericValue<T, Stage: StageFlag>: AnyStageValue {
-
-    public let value: T
+    internal let value: T!
+    internal let result: SimpleResult<T>!
+    internal let task: NonFailableTask<T>!
+    public let taskFailable: FailableTask<T>!
     
     init(_ value: T) {
         self.value = value
+        result = nil
+        task = nil
+        taskFailable = nil
     }
-}
-
-public final class GenericResult<T, Stage: StageFlag>: AnyStageResult {
-    
-    public let result: SimpleResult<T>
     
     init(_ result: SimpleResult<T>) {
+        value = nil
         self.result = result
+        task = nil
+        taskFailable = nil
     }
-}
-
-public final class GenericGuarantee<T, Stage: StageFlag>: AnyStageGuarantee {
-    
-    public let task: NonFailableTask<T>
     
     init(_ task: NonFailableTask<T>) {
+        value = nil
+        result = nil
         self.task = task
+        taskFailable = nil
+    }
+
+    init(_ taskFailable: FailableTask<T>) {
+        value = nil
+        result = nil
+        task = nil
+        self.taskFailable = taskFailable
     }
 }
 
-public final class GenericPromise<T, Stage: StageFlag>: AnyStagePromise {
-    
-    public let task: FailableTask<T>
+public typealias AnyStageValue<T, Stage: StageFlag> = GenericNode<T, NonFailableFlag, InstantFlag, Stage>
 
-    init(_ task: FailableTask<T>) {
-        self.task = task
-    }
-}
+public typealias AnyStageResult<T, Stage: StageFlag> = GenericNode<T, FailableFlag, InstantFlag, Stage>
 
-public typealias Value<T> = GenericValue<T, Thenable>
-public typealias Result<T> = GenericResult<T, Thenable>
-public typealias Guarantee<T> = GenericGuarantee<T, Thenable>
-public typealias Promise<T> = GenericPromise<T, Thenable>
+public typealias AnyStageGuarantee<T, Stage: StageFlag> = GenericNode<T, NonFailableFlag, AsyncFlag, Stage>
 
-public typealias PartiallyCaughtResult<T> = GenericResult<T, PartiallyCaught>
-public typealias CaughtResult<T> = GenericResult<T, CompletelyCaught>
-public typealias PartiallyCaughtPromise<T> = GenericPromise<T, PartiallyCaught>
-public typealias CaughtPromise<T> = GenericPromise<T, CompletelyCaught>
+public typealias AnyStagePromise<T, Stage: StageFlag> = GenericNode<T, FailableFlag, AsyncFlag, Stage>
 
-public typealias FinalizedValue<T> = GenericValue<T, Finalized>
-public typealias FinalizedResult<T> = GenericResult<T, Finalized>
-public typealias FinalizedGuarantee<T> = GenericGuarantee<T, Finalized>
-public typealias FinalizedPromise<T> = GenericPromise<T, Finalized>
+public typealias Value<T> = AnyStageValue<T, Thenable>
+public typealias Result<T> = AnyStageResult<T, Thenable>
+public typealias Guarantee<T> = AnyStageGuarantee<T, Thenable>
+public typealias Promise<T> = AnyStagePromise<T, Thenable>
 
+public typealias PartiallyCaughtResult<T> = AnyStageResult<T, PartiallyCaught>
+public typealias CaughtResult<T> = AnyStageResult<T, CompletelyCaught>
+public typealias PartiallyCaughtPromise<T> = AnyStagePromise<T, PartiallyCaught>
+public typealias CaughtPromise<T> = AnyStagePromise<T, CompletelyCaught>
+
+public typealias FinalizedValue<T> = AnyStageValue<T, Finalized>
+public typealias FinalizedResult<T> = AnyStageResult<T, Finalized>
+public typealias FinalizedGuarantee<T> = AnyStageGuarantee<T, Finalized>
+public typealias FinalizedPromise<T> = AnyStagePromise<T, Finalized>

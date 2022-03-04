@@ -10,6 +10,8 @@ public final class NonFailableFlag: IsFailableFlag {}
 /// Flag indicating that the result of the node can sometimes be a failure.
 public final class FailableFlag: IsFailableFlag {}
 
+public final class ZebraFlag: IsFailableFlag {}
+
 
 /// Base class for flags indicating whether results are async or instantaneous
 public class WhenFlag {}
