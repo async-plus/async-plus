@@ -10,33 +10,33 @@ public protocol Catchable: Node where Stage: Chainable, Fails == FailableFlag {
     func `catch`(_ body: @escaping (Error) throws -> ()) -> GenericNode<T, FailableFlag, When, PartiallyCaught>
     
     @discardableResult
-    func `catch`(_ body: @escaping (Error) async -> ()) -> GenericNode<T, FailableFlag, AsyncFlag, CompletelyCaught>
+    func `catch`(_ body: @escaping (Error) async -> ()) -> CaughtPromise<T>
 
-    func `catch`(_ body: @escaping (Error) async throws -> ()) -> GenericNode<T, FailableFlag, AsyncFlag, PartiallyCaught>
+    func `catch`(_ body: @escaping (Error) async throws -> ()) -> PartiallyCaughtPromise<T>
 }
 
-//extension GenericNode: Catchable where Fails == FailableFlag, When == InstantFlag, Stage: Chainable {
-//    
-//    @discardableResult
-//    func `catch`(_ body: @escaping (Error) -> ()) -> GenericNode<T, FailableFlag, InstantFlag, CompletelyCaught> {
-//        if case .failure(let error) = result {
-//            body(error)
-//        }
-//        return CaughtResult(result)
-//    }
-//    
-//    func `catch`(_ body: @escaping (Error) throws -> ()) -> GenericNode<T, FailableFlag, InstantFlag, PartiallyCaught> {
-//        do {
-//            if case .failure(let error) = result {
-//                try body(error)
-//            }
-//            return(PartiallyCaughtResult(result))
-//        } catch {
-//            return PartiallyCaughtResult(.failure(error))
-//        }
-//    }
-//    
-//
+extension GenericNode: Catchable where Fails == FailableFlag, When == InstantFlag, Stage: Chainable {
+    
+    @discardableResult
+    public func `catch`(_ body: @escaping (Error) -> ()) -> GenericNode<T, FailableFlag, InstantFlag, CompletelyCaught> {
+        if case .failure(let error) = result {
+            body(error)
+        }
+        return CaughtResult(result)
+    }
+    
+    public func `catch`(_ body: @escaping (Error) throws -> ()) -> GenericNode<T, FailableFlag, InstantFlag, PartiallyCaught> {
+        do {
+            if case .failure(let error) = result {
+                try body(error)
+            }
+            return(PartiallyCaughtResult(result))
+        } catch {
+            return PartiallyCaughtResult(.failure(error))
+        }
+    }
+    
+
 //    @discardableResult
 //    public func `catch`(_ body: (Error) -> ()) -> CaughtResult<T> {
 //        if case .failure(let error) = result {
@@ -55,7 +55,7 @@ public protocol Catchable: Node where Stage: Chainable, Fails == FailableFlag {
 //            return PartiallyCaughtResult(.failure(error))
 //        }
 //    }
-//    
+    
 //    @discardableResult
 //    public func `catch`(_ body: @escaping (Error) async -> ()) -> GenericNode<T, FailableFlag, AsyncFlag, CompletelyCaught> {
 //        return CaughtPromise(Task.init {
@@ -68,15 +68,15 @@ public protocol Catchable: Node where Stage: Chainable, Fails == FailableFlag {
 //            try await catchAsyncThrowsBody(body, result: result)
 //        })
 //    }
-//}
+}
 
-extension GenericNode: Catchable where Stage: Chainable, Fails == FailableFlag, When == AsyncFlag  {
+extension GenericNode: Catchable where Stage: Chainable, Fails == FailableFlag  {
     
     
     // These catch functions are async because the current result is already async.
     @discardableResult
-    public func `catch`(_ body: @escaping (Error) -> ()) -> GenericNode<T, FailableFlag, AsyncFlag, CompletelyCaught> {
-        return CaughtPromise(Task.init {
+    public func `catch`(_ body: @escaping (Error) -> ()) -> GenericNode<T, FailableFlag, When, CompletelyCaught> {
+        return GenericNode<T, FailableFlag, When, CompletelyCaught>(Task.init {
             switch await taskFailable.result {
             case .success(let value):
                 return value
@@ -100,13 +100,13 @@ extension GenericNode: Catchable where Stage: Chainable, Fails == FailableFlag, 
     }
     
     @discardableResult
-    public func `catch`(_ body: @escaping (Error) async -> ()) -> GenericNode<T, FailableFlag, AsyncFlag, CompletelyCaught> {
+    public func `catch`(_ body: @escaping (Error) async -> ()) -> CaughtPromise<T> {
         return CaughtPromise(Task.init {
             try await catchAsyncBody(body, result: await taskFailable.result)
         })
     }
 
-    public func `catch`(_ body: @escaping (Error) async throws -> ()) -> GenericNode<T, FailableFlag, AsyncFlag, PartiallyCaught> {
+    public func `catch`(_ body: @escaping (Error) async throws -> ()) -> PartiallyCaughtPromise<T> {
         return PartiallyCaughtPromise(Task.init {
             try await catchAsyncThrowsBody(body, result: await taskFailable.result)
         })
