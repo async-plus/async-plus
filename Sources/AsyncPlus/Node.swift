@@ -3,24 +3,24 @@ import AppKit
 
 public protocol Node {
     associatedtype T
-    associatedtype Fails: FailableFlag
+    associatedtype Fails: IsFailableFlag
     associatedtype When: WhenFlag
     associatedtype Stage: StageFlag
 }
 
-public protocol NodeNonFailable: Node where Fails == NeverFails {}
-public protocol NodeFailable: Node where Fails == Sometimes {}
-public protocol NodeInstant: Node where When == Instant {}
-public protocol NodeAsync: Node where When == Async {}
+public protocol NonFailable: Node where Fails == NonFailableFlag {}
+public protocol Failable: Node where Fails == FailableFlag {}
+public protocol Instant: Node where When == InstantFlag {}
+public protocol Async: Node where When == AsyncFlag {}
 
-public protocol NodeNonFailableInstant: NodeNonFailable, NodeInstant {
+public protocol AnyStageValue: NonFailable, Instant {
     var value: T { get }
 }
 
-public protocol NodeFailableInstant: NodeFailable, NodeInstant {
+public protocol AnyStageResult: Failable, Instant {
     var result: SimpleResult<T> { get }
 }
-extension NodeFailableInstant {
+extension AnyStageResult {
     public func `throws`() throws -> T {
         switch result {
         case .success(let value):
@@ -40,19 +40,19 @@ extension NodeFailableInstant {
     }
 }
 
-public protocol NodeNonFailableAsync: NodeNonFailable, NodeAsync {
+public protocol AnyStageGuarantee: NonFailable, Async {
     var task: NonFailableTask<T> { get }
 }
-extension NodeNonFailableAsync {
+extension AnyStageGuarantee {
     public func async() async -> T {
         return await task.value
     }
 }
 
-public protocol NodeFailableAsync: NodeFailable, NodeAsync {
+public protocol AnyStagePromise: Failable, Async {
     var task: FailableTask<T> { get }
 }
-extension NodeFailableAsync {
+extension AnyStagePromise {
     public func asyncThrows() async throws -> T {
         return try await task.value
     }
@@ -71,7 +71,7 @@ extension NodeFailableAsync {
     }
 }
 
-public final class GenericNodeNonFailableInstant<T, Stage: StageFlag>: NodeNonFailableInstant {
+public final class GenericValue<T, Stage: StageFlag>: AnyStageValue {
 
     public let value: T
     
@@ -80,7 +80,7 @@ public final class GenericNodeNonFailableInstant<T, Stage: StageFlag>: NodeNonFa
     }
 }
 
-public final class GenericNodeFailableInstant<T, Stage: StageFlag>: NodeFailableInstant {
+public final class GenericResult<T, Stage: StageFlag>: AnyStageResult {
     
     public let result: SimpleResult<T>
     
@@ -89,7 +89,7 @@ public final class GenericNodeFailableInstant<T, Stage: StageFlag>: NodeFailable
     }
 }
 
-public final class GenericNodeNonFailableAsync<T, Stage: StageFlag>: NodeNonFailableAsync {
+public final class GenericGuarantee<T, Stage: StageFlag>: AnyStageGuarantee {
     
     public let task: NonFailableTask<T>
     
@@ -98,7 +98,7 @@ public final class GenericNodeNonFailableAsync<T, Stage: StageFlag>: NodeNonFail
     }
 }
 
-public final class GenericNodeFailableAsync<T, Stage: StageFlag>: NodeFailableAsync {
+public final class GenericPromise<T, Stage: StageFlag>: AnyStagePromise {
     
     public let task: FailableTask<T>
 
@@ -107,18 +107,18 @@ public final class GenericNodeFailableAsync<T, Stage: StageFlag>: NodeFailableAs
     }
 }
 
-public typealias ChainableValue<T> = GenericNodeNonFailableInstant<T, Thenable>
-public typealias ChainableResult<T> = GenericNodeFailableInstant<T, Thenable>
-public typealias Guarantee<T> = GenericNodeNonFailableAsync<T, Thenable>
-public typealias Promise<T> = GenericNodeFailableAsync<T, Thenable>
+public typealias Value<T> = GenericValue<T, Thenable>
+public typealias Result<T> = GenericResult<T, Thenable>
+public typealias Guarantee<T> = GenericGuarantee<T, Thenable>
+public typealias Promise<T> = GenericPromise<T, Thenable>
 
-public typealias PartiallyCaughtResult<T> = GenericNodeFailableInstant<T, PartiallyCaught>
-public typealias CaughtResult<T> = GenericNodeFailableInstant<T, CompletelyCaught>
-public typealias PartiallyCaughtPromise<T> = GenericNodeFailableAsync<T, PartiallyCaught>
-public typealias CaughtPromise<T> = GenericNodeFailableAsync<T, CompletelyCaught>
+public typealias PartiallyCaughtResult<T> = GenericResult<T, PartiallyCaught>
+public typealias CaughtResult<T> = GenericResult<T, CompletelyCaught>
+public typealias PartiallyCaughtPromise<T> = GenericPromise<T, PartiallyCaught>
+public typealias CaughtPromise<T> = GenericPromise<T, CompletelyCaught>
 
-public typealias FinalizedValue<T> = GenericNodeNonFailableInstant<T, Finalized>
-public typealias FinalizedResult<T> = GenericNodeFailableInstant<T, Finalized>
-public typealias FinalizedGuarantee<T> = GenericNodeNonFailableAsync<T, Finalized>
-public typealias FinalizedPromise<T> = GenericNodeFailableAsync<T, Finalized>
+public typealias FinalizedValue<T> = GenericValue<T, Finalized>
+public typealias FinalizedResult<T> = GenericResult<T, Finalized>
+public typealias FinalizedGuarantee<T> = GenericGuarantee<T, Finalized>
+public typealias FinalizedPromise<T> = GenericPromise<T, Finalized>
 

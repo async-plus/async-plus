@@ -2,26 +2,26 @@ import Foundation
 
 // Note: When you are using recover and T is void or (), then either 1) You are intending to stack on further operations after the correction, or 2) you could have used `catch`. For this reason, there are no @discardableResult recover functions. For this use case, catch should be used.
 
-extension NodeFailableInstant where Stage == Thenable {
+extension AnyStageResult where Stage == Thenable {
     
-    public func recover(_ body: (Error) -> T) -> ChainableValue<T> {
+    public func recover(_ body: (Error) -> T) -> Value<T> {
         switch result {
         case .success(let value):
-            return ChainableValue(value)
+            return Value(value)
         case .failure(let error):
-            return ChainableValue(body(error))
+            return Value(body(error))
         }
     }
 
-    public func recover(_ body: (Error) throws -> T) -> ChainableResult<T> {
+    public func recover(_ body: (Error) throws -> T) -> Result<T> {
         switch result {
         case .success(let value):
-            return ChainableResult(.success(value))
+            return Result(.success(value))
         case .failure(let errorOriginal):
             do {
-                return ChainableResult(.success(try body(errorOriginal)))
+                return Result(.success(try body(errorOriginal)))
             } catch {
-                return ChainableResult(.failure(error))
+                return Result(.failure(error))
             }
         }
     }
@@ -39,7 +39,7 @@ extension NodeFailableInstant where Stage == Thenable {
     }
 }
 
-extension NodeFailableAsync where Stage == Thenable {
+extension AnyStagePromise where Stage == Thenable {
     
     // These recover functions are async because the current result is already async.
     public func recover(_ body: @escaping (Error) -> T) -> Guarantee<T> {

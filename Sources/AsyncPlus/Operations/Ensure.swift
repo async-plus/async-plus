@@ -4,11 +4,11 @@ import Foundation
 
 // Note: No `ensure` function is marked with @discardableResult because `finally` is the preferred way of ending the chain.
 
-extension NodeFailableInstant where Stage == Thenable {
+extension AnyStageResult where Stage == Thenable {
     
-    public func ensure(_ body: () -> ()) -> ChainableResult<T> {
+    public func ensure(_ body: () -> ()) -> Result<T> {
         body()
-        return ChainableResult<T>(result)
+        return Result<T>(result)
     }
     
     public func ensure(_ body: @escaping () async -> ()) -> Promise<T> {
@@ -18,21 +18,21 @@ extension NodeFailableInstant where Stage == Thenable {
     }
 }
 
-extension NodeFailableInstant where Stage: Caught {
+extension AnyStageResult where Stage: Caught {
     
-    public func ensure(_ body: () -> ()) -> GenericNodeFailableInstant<T, Stage> {
+    public func ensure(_ body: () -> ()) -> GenericResult<T, Stage> {
         body()
-        return GenericNodeFailableInstant<T, Stage>(result)
+        return GenericResult<T, Stage>(result)
     }
     
-    public func ensure(_ body: @escaping () async -> ()) -> GenericNodeFailableAsync<T, Stage> {
-        return GenericNodeFailableAsync<T, Stage>(Task.init {
+    public func ensure(_ body: @escaping () async -> ()) -> GenericPromise<T, Stage> {
+        return GenericPromise<T, Stage>(Task.init {
             return try await ensureAsyncBody(body, result: result)
         })
     }
 }
 
-extension NodeFailableAsync where Stage == Thenable {
+extension AnyStagePromise where Stage == Thenable {
     
     public func ensure(_ body: @escaping () -> ()) -> Promise<T> {
         return Promise<T>(Task.init {
@@ -49,18 +49,18 @@ extension NodeFailableAsync where Stage == Thenable {
     }
 }
 
-extension NodeFailableAsync where Stage: Caught {
+extension AnyStagePromise where Stage: Caught {
     
-    public func ensure(_ body: @escaping () -> ()) -> GenericNodeFailableAsync<T, Stage> {
-        return GenericNodeFailableAsync<T, Stage>(Task.init {
+    public func ensure(_ body: @escaping () -> ()) -> GenericPromise<T, Stage> {
+        return GenericPromise<T, Stage>(Task.init {
             let result = await task.result
             body()
             return try result.get()
         })
     }
     
-    public func ensure(_ body: @escaping () async -> ()) -> GenericNodeFailableAsync<T, Stage> {
-        return GenericNodeFailableAsync<T, Stage>(Task.init {
+    public func ensure(_ body: @escaping () async -> ()) -> GenericPromise<T, Stage> {
+        return GenericPromise<T, Stage>(Task.init {
             return try await ensureAsyncBody(body, result: await task.result)
         })
     }
@@ -71,3 +71,4 @@ private func ensureAsyncBody<T>(_ body: @escaping () async -> (), result: Simple
     await body()
     return try result.get()
 }
+

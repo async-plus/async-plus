@@ -52,7 +52,7 @@ Async+ allows us to easily add catch behavior at any level of a failable operati
 ```
 import AsycPlus
 
-extension NodeFailableAsync {
+extension AnyStagePromise {
     func printingFailure() -> CaughtPromise<T> {
         return self.catch {
             error in

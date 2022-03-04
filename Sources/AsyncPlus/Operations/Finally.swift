@@ -1,6 +1,6 @@
 import Foundation
 
-extension NodeNonFailableInstant {
+extension AnyStageValue {
     
     @discardableResult
     public func finally(_ body: () -> ()) -> FinalizedValue<T> {
@@ -17,7 +17,7 @@ extension NodeNonFailableInstant {
     }
 }
 
-extension NodeFailableInstant where Stage == CompletelyCaught {
+extension AnyStageResult where Stage == CompletelyCaught {
     
     @discardableResult
     public func finally(_ body: () -> ()) -> FinalizedResult<T> {
@@ -34,7 +34,7 @@ extension NodeFailableInstant where Stage == CompletelyCaught {
     }
 }
 
-extension NodeNonFailableAsync {
+extension Guarantee {
     
     @discardableResult
     public func finally(_ body: @escaping () -> ()) -> FinalizedGuarantee<T> {
@@ -55,7 +55,7 @@ extension NodeNonFailableAsync {
     }
 }
 
-extension NodeFailableAsync where Stage == CompletelyCaught {
+extension AnyStagePromise where Stage == CompletelyCaught {
     
     @discardableResult
     public func finally(_ body: @escaping () -> ()) -> FinalizedPromise<T> {

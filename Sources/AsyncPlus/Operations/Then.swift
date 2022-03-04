@@ -2,32 +2,32 @@ import Foundation
 
 // Note: For @discardableResult we require return type to be () or void. Otherwise, the operation produces a result which implies the result should be used in some kind of chained call.
 
-extension NodeNonFailableInstant where Stage == Thenable {
+extension AnyStageValue where Stage == Thenable {
     
-    public func then<U>(_ body: (T) -> U) -> ChainableValue<U> {
-        return ChainableValue(body(value))
+    public func then<U>(_ body: (T) -> U) -> Value<U> {
+        return Value(body(value))
     }
     
     @discardableResult
-    public func then(_ body: (T) -> ()) -> ChainableValue<T> {
+    public func then(_ body: (T) -> ()) -> Value<T> {
         body(value)
-        return ChainableValue(value)
+        return Value(value)
     }
     
-    public func then<U>(_ body: (T) throws -> U) -> ChainableResult<U> {
+    public func then<U>(_ body: (T) throws -> U) -> Result<U> {
         do {
-            return ChainableResult(.success(try body(value)))
+            return Result(.success(try body(value)))
         } catch {
-            return ChainableResult(.failure(error))
+            return Result(.failure(error))
         }
     }
     
-    public func then(_ body: (T) throws -> ()) -> ChainableResult<T> {
+    public func then(_ body: (T) throws -> ()) -> Result<T> {
         do {
             try body(value)
-            return ChainableResult(.success(value))
+            return Result(.success(value))
         } catch {
-            return ChainableResult(.failure(error))
+            return Result(.failure(error))
         }
     }
     
@@ -59,51 +59,51 @@ extension NodeNonFailableInstant where Stage == Thenable {
     }
 }
 
-extension NodeFailableInstant where Stage == Thenable {
+extension AnyStageResult where Stage == Thenable {
     
-    public func then<U>(_ body: (T) -> U) -> ChainableResult<U> {
+    public func then<U>(_ body: (T) -> U) -> Result<U> {
         switch result {
         case .success(let value):
-            return ChainableResult(.success(body(value)))
+            return Result(.success(body(value)))
         case .failure(let error):
-            return ChainableResult(.failure(error))
+            return Result(.failure(error))
         }
     }
     
-    public func then(_ body: (T) -> ()) -> ChainableResult<T> {
+    public func then(_ body: (T) -> ()) -> Result<T> {
         switch result {
         case .success(let value):
             body(value)
-            return ChainableResult(.success(value))
+            return Result(.success(value))
         case .failure(let error):
-            return ChainableResult(.failure(error))
+            return Result(.failure(error))
         }
     }
 
-    public func then<U>(_ body: (T) throws -> U) -> ChainableResult<U> {
+    public func then<U>(_ body: (T) throws -> U) -> Result<U> {
         switch result {
         case .success(let value):
             do {
-                return ChainableResult(.success(try body(value)))
+                return Result(.success(try body(value)))
             } catch {
-                return ChainableResult(.failure(error))
+                return Result(.failure(error))
             }
         case .failure(let error):
-            return ChainableResult(.failure(error))
+            return Result(.failure(error))
         }
     }
     
-    public func then(_ body: (T) throws -> ()) -> ChainableResult<T> {
+    public func then(_ body: (T) throws -> ()) -> Result<T> {
         switch result {
         case .success(let value):
             do {
                 try body(value)
-                return ChainableResult(.success(value))
+                return Result(.success(value))
             } catch {
-                return ChainableResult(.failure(error))
+                return Result(.failure(error))
             }
         case .failure(let error):
-            return ChainableResult(.failure(error))
+            return Result(.failure(error))
         }
     }
     
@@ -154,7 +154,7 @@ extension NodeFailableInstant where Stage == Thenable {
     }
 }
 
-extension NodeNonFailableAsync where Stage == Thenable {
+extension Guarantee where Stage == Thenable {
     
     public func then<U>(_ body: @escaping (T) -> U) -> Guarantee<U> {
         return Guarantee<U>(Task.init {
@@ -215,7 +215,7 @@ extension NodeNonFailableAsync where Stage == Thenable {
     }
 }
 
-extension NodeFailableAsync where Stage == Thenable {
+extension AnyStagePromise where Stage == Thenable {
     
     public func then<U>(_ body: @escaping (T) -> U) -> Promise<U> {
         return Promise<U>(Task.init {

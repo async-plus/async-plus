@@ -2,23 +2,23 @@ import Foundation
 
 
 /// Base class for flags indicating whether the *result* of the operation can be a failure (Not to be confused with whether the closure passed to the operation function e.g. `recover` `catch` etc. can throw).
-public class FailableFlag {}
+public class IsFailableFlag {}
 
 /// Flag indicating that the result of the node could never be a failure.
-public final class NeverFails: FailableFlag {}
+public final class NonFailableFlag: IsFailableFlag {}
 
 /// Flag indicating that the result of the node can sometimes be a failure.
-public final class Sometimes: FailableFlag {}
+public final class FailableFlag: IsFailableFlag {}
 
 
 /// Base class for flags indicating whether results are async or instantaneous
 public class WhenFlag {}
 
 /// Flag indicating that the result represented by the node is instantaneously available during chaining.
-public final class Instant: WhenFlag {}
+public final class InstantFlag: WhenFlag {}
 
 /// Flag indicating that the result contained in the node is the result of an async operation.
-public final class Async: WhenFlag {}
+public final class AsyncFlag: WhenFlag {}
 
 
 /// Base class for flags indicating whether the value has been caught. This indicates what "stage" the value is in with respect to error handling, which is useful for @discardableResult
