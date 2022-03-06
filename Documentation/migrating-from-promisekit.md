@@ -26,5 +26,5 @@ Additionally, these operations offer functionality that is different from Promis
 * `.throws() throws`: If none of the code is async, then we could have a `.throws()` operator.
 * `.async() async`: Can use on a guarantee (which is returned by a non-throwing `recover`). Can also use on a catch when the value type is (), as this is the same as a recover.
 * `.asyncOptional()`: Async call that returns an optional value of the result.
-* `.asyncResult()`: Async call that returns a `Result<T, Error>`
+* `.asyncResult()`: Async call that returns a `Result<T, Error>` (`Swift.Result<T, Error>`)
 * `.asyncThrows()`: Async call that returns the value or throws.
