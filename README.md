@@ -99,5 +99,7 @@ To use Async+ in a Swift file you must add `import AsyncPlus` to the top of the 
 
 ### 🚀  Feedback and Contributing
 
-This package is in its initial release: please provide feedback and suggestions in order to help shape the API, either by submitting an [issue](https://github.com/async-plus/async-plus/issues/new) on Github or sending a message on [Discord](https://discord.gg/vaAhGvvHpW). 
+This package is in its initial release: please provide feedback and suggestions in order to help shape the API, either by submitting an [issue](https://github.com/async-plus/async-plus/issues/new) on Github or sending a message on [Discord](https://discord.gg/vaAhGvvHpW).
+
+Special thanks to the developers of PromiseKit and [mxcl](https://github.com/mxcl) for inspiring this work and promoting its development.
 
