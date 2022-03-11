@@ -4,14 +4,14 @@ import AsyncPlus
 extension Catchable {
     
     func reportToGoogle() {
-        self.catchEscaping {
-            err in
-            print(err)
-        }.ensure {
-            print("Reported to Google")
-        }.finally {
-            print("Done")
-        }
+//        self.catchEscaping {
+//            err in
+//            print(err)
+//        }.ensure {
+//            print("Reported to Google")
+//        }.finally {
+//            print("Done")
+//        }
     }
 }
 

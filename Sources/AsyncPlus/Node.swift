@@ -7,68 +7,68 @@ public protocol Node {
     associatedtype When: WhenFlag
     associatedtype Stage: StageFlag
 }
-//
-//public protocol AnyStageValueP: Node where Fails == NonFailableFlag, When == InstantFlag {
-//    var value: T { get }
-//
-//}
 
-//public protocol AnyStageResultP: Node where Fails == FailableFlag, When == InstantFlag {
-//    var result: SimpleResult<T> { get }
-//
-//}
-//extension AnyStageResultP {
-//    public func `throws`() throws -> T {
-//        switch result {
-//        case .success(let value):
-//            return value
-//        case .failure(let error):
-//            throw error
-//        }
-//    }
-//
-//    public func optional() -> T? {
-//        switch result {
-//        case .success(let value):
-//            return value
-//        case .failure(_):
-//            return nil
-//        }
-//    }
-//}
+public protocol IAnyStageValue: Node where Fails == NonFailableFlag, When == InstantFlag {
+    var value: T { get }
 
-//public protocol AnyStageGuaranteeP: Node where Fails == NonFailableFlag, When == AsyncFlag {
-//    var task: NonFailableTask<T> { get }
-//
-//
-//}
-//extension AnyStageGuaranteeP {
-//    public func async() async -> T {
-//        return await task.value
-//    }
-//}
+}
 
-//public protocol AnyStagePromiseP: Node where Fails == FailableFlag, When == AsyncFlag {
-//    var taskFailable: FailableTask<T>! { get }
-//}
-//extension AnyStagePromiseP {
-//    public func asyncThrows() async throws -> T {
-//        return try await taskFailable.value
-//    }
-//
-//    public func asyncOptional() async -> T? {
-//        switch await taskFailable.result {
-//        case .success(let value):
-//            return value
-//        case .failure(_):
-//            return nil
-//        }
-//    }
-//
-//    public func asyncResult() async -> SimpleResult<T> {
-//        return await taskFailable.result
-//    }
-//}
+public protocol IAnyStageResult: Node where Fails == FailableFlag, When == InstantFlag {
+    var result: SimpleResult<T> { get }
+
+}
+extension IAnyStageResult {
+    public func `throws`() throws -> T {
+        switch result {
+        case .success(let value):
+            return value
+        case .failure(let error):
+            throw error
+        }
+    }
+
+    public func optional() -> T? {
+        switch result {
+        case .success(let value):
+            return value
+        case .failure(_):
+            return nil
+        }
+    }
+}
+
+public protocol IAnyStageGuarantee: Node where Fails == NonFailableFlag, When == AsyncFlag {
+    var task: NonFailableTask<T> { get }
+
+
+}
+extension IAnyStageGuarantee {
+    public func async() async -> T {
+        return await task.value
+    }
+}
+
+public protocol IAnyStagePromise: Node where Fails == FailableFlag, When == AsyncFlag {
+    var task: FailableTask<T> { get }
+}
+extension IAnyStagePromise {
+    public func asyncThrows() async throws -> T {
+        return try await task.value
+    }
+
+    public func asyncOptional() async -> T? {
+        switch await task.result {
+        case .success(let value):
+            return value
+        case .failure(_):
+            return nil
+        }
+    }
+
+    public func asyncResult() async -> SimpleResult<T> {
+        return await task.result
+    }
+}
 
 public class AnyStageValue<T, Stage: StageFlag>: Node {
     public typealias Fails = NonFailableFlag
