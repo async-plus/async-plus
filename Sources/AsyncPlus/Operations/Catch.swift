@@ -5,13 +5,22 @@ import Foundation
 
 public protocol Catchable: Node where Stage: Chainable, Fails == FailableFlag {
     
-    associatedtype InstantCaughtType: Node where InstantCaughtType.Stage == CompletelyCaught
-    associatedtype InstantPartiallyCaughtType: Node where InstantPartiallyCaughtType.Stage == PartiallyCaught
+    associatedtype SelfCaught: Node where
+        SelfCaught.T == T,
+        SelfCaught.When == When,
+        SelfCaught.Fails == Fails,
+        SelfCaught.Stage == CompletelyCaught
+    
+    associatedtype SelfPartiallyCaught: Node where
+        SelfPartiallyCaught.T == T,
+        SelfPartiallyCaught.When == When,
+        SelfPartiallyCaught.Fails == Fails,
+        SelfPartiallyCaught.Stage == PartiallyCaught
     
     @discardableResult
-    func `catch`(_ body: @escaping (Error) -> ()) -> InstantCaughtType
+    func `catch`(_ body: @escaping (Error) -> ()) -> SelfCaught
 
-    func `catch`(_ body: @escaping (Error) throws -> ()) -> InstantPartiallyCaughtType
+    func `catch`(_ body: @escaping (Error) throws -> ()) -> SelfPartiallyCaught
     
     @discardableResult
     func `catch`(_ body: @escaping (Error) async -> ()) -> CaughtPromise<T>
@@ -19,8 +28,8 @@ public protocol Catchable: Node where Stage: Chainable, Fails == FailableFlag {
     func `catch`(_ body: @escaping (Error) async throws -> ()) -> PartiallyCaughtPromise<T>
 }
 
-//extension AnyStageResult: Catchable where Stage: Chainable {
-//
+extension AnyStageResult: Catchable where Stage: Chainable {
+
 //    @discardableResult
 //    public func `catch`(_ body: (Error) -> ()) -> CaughtResult<T> {
 //        if case .failure(let error) = result {
@@ -39,20 +48,40 @@ public protocol Catchable: Node where Stage: Chainable, Fails == FailableFlag {
 //            return PartiallyCaughtResult(.failure(error))
 //        }
 //    }
-//
-//    @discardableResult
-//    public func `catch`(_ body: @escaping (Error) async -> ()) -> CaughtPromise<T> {
-//        return CaughtPromise(Task.init {
-//            try await catchAsyncBody(body, result: result)
-//        })
-//    }
-//
-//    public func `catch`(_ body: @escaping (Error) async throws -> ()) -> PartiallyCaughtPromise<T> {
-//        return PartiallyCaughtPromise(Task.init {
-//            try await catchAsyncThrowsBody(body, result: result)
-//        })
-//    }
-//}
+
+    @discardableResult
+    public func `catch`(_ body: @escaping (Error) async -> ()) -> CaughtPromise<T> {
+        return CaughtPromise(Task.init {
+            try await catchAsyncBody(body, result: result)
+        })
+    }
+
+    public func `catch`(_ body: @escaping (Error) async throws -> ()) -> PartiallyCaughtPromise<T> {
+        return PartiallyCaughtPromise(Task.init {
+            try await catchAsyncThrowsBody(body, result: result)
+        })
+    }
+    
+    // For protocol conformance:
+    @discardableResult
+    public func `catch`(_ body: @escaping (Error) -> ()) -> CaughtResult<T> {
+        if case .failure(let error) = result {
+            body(error)
+        }
+        return CaughtResult(result)
+    }
+
+    public func `catch`(_ body: @escaping (Error) throws -> ()) -> PartiallyCaughtResult<T> {
+        do {
+            if case .failure(let error) = result {
+                try body(error)
+            }
+            return(PartiallyCaughtResult(result))
+        } catch {
+            return PartiallyCaughtResult(.failure(error))
+        }
+    }
+}
 
 extension AnyStagePromise: Catchable where Stage: Chainable  {
 
