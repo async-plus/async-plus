@@ -46,60 +46,6 @@ extension AnyStageResult: Catchable where Stage: Chainable {
             return PartiallyCaughtResult(.failure(error))
         }
     }
-
-    @discardableResult
-    public func `catch`(_ body: @escaping (Error) async -> ()) -> CaughtPromise<T> {
-        return CaughtPromise(Task.init {
-            try await catchAsyncBody(body, result: result)
-        })
-    }
-
-    public func `catch`(_ body: @escaping (Error) async throws -> ()) -> PartiallyCaughtPromise<T> {
-        return PartiallyCaughtPromise(Task.init {
-            try await catchAsyncThrowsBody(body, result: result)
-        })
-    }
-}
-
-extension AnyStagePromise where Stage: Chainable  {
-
-    @discardableResult
-    public func `catch`(_ body: @escaping (Error) -> ()) -> CaughtPromise<T> {
-        return CaughtPromise<T>(Task.init {
-            switch await task.result {
-            case .success(let value):
-                return value
-            case .failure(let error):
-                body(error)
-                throw error
-            }
-        })
-    }
-
-    public func `catch`(_ body: @escaping (Error) throws -> ()) -> PartiallyCaughtPromise<T> {
-        return PartiallyCaughtPromise<T>(Task.init {
-            switch await task.result {
-            case .success(let value):
-                return value
-            case .failure(let error):
-                try body(error)
-                throw error
-            }
-        })
-    }
-
-    @discardableResult
-    public func `catch`(_ body: @escaping (Error) async -> ()) -> CaughtPromise<T> {
-        return CaughtPromise(Task.init {
-            try await catchAsyncBody(body, result: await task.result)
-        })
-    }
-
-    public func `catch`(_ body: @escaping (Error) async throws -> ()) -> PartiallyCaughtPromise<T> {
-        return PartiallyCaughtPromise(Task.init {
-            try await catchAsyncThrowsBody(body, result: await task.result)
-        })
-    }
 }
 
 private func catchAsyncBody<T>(_ body: @escaping (Error) async -> (), result: SimpleResult<T>) async throws -> T {
