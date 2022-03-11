@@ -1,7 +1,9 @@
+import Foundation
+
 @testable import AsyncPlus
 
 func test() {
-    let r: PartiallyCaughtPromise<Int> = attempt {
+    attempt {
         () -> Int in
         try await mockSleepThrowing(seconds: 1)
         return 2

@@ -70,7 +70,7 @@ public protocol Node {
 //    }
 //}
 
-public final class GenericNode<T, Fails: IsFailableFlag, When: WhenFlag, Stage: StageFlag>: Node {
+public class GenericNode<T, Fails: IsFailableFlag, When: WhenFlag, Stage: StageFlag>: Node {
     
     internal let value: T!
     internal let result: SimpleResult<T>!
@@ -106,13 +106,21 @@ public final class GenericNode<T, Fails: IsFailableFlag, When: WhenFlag, Stage: 
     }
 }
 
-public typealias AnyStageValue<T, Stage: StageFlag> = GenericNode<T, NonFailableFlag, InstantFlag, Stage>
+public class AnyStageValue<T, Stage: StageFlag>: GenericNode<T, NonFailableFlag, InstantFlag, Stage> {}
 
-public typealias AnyStageResult<T, Stage: StageFlag> = GenericNode<T, FailableFlag, InstantFlag, Stage>
+public class AnyStageResult<T, Stage: StageFlag>: GenericNode<T, FailableFlag, InstantFlag, Stage> {}
 
-public typealias AnyStageGuarantee<T, Stage: StageFlag> = GenericNode<T, NonFailableFlag, AsyncFlag, Stage>
+public class AnyStageGuarantee<T, Stage: StageFlag>: GenericNode<T, NonFailableFlag, AsyncFlag, Stage> {}
 
-public typealias AnyStagePromise<T, Stage: StageFlag> = GenericNode<T, FailableFlag, AsyncFlag, Stage>
+public class AnyStagePromise<T, Stage: StageFlag>: GenericNode<T, FailableFlag, AsyncFlag, Stage> {}
+
+//public typealias AnyStageValue<T, Stage: StageFlag> = GenericNode<T, NonFailableFlag, InstantFlag, Stage>
+//
+//public typealias AnyStageResult<T, Stage: StageFlag> = GenericNode<T, FailableFlag, InstantFlag, Stage>
+//
+//public typealias AnyStageGuarantee<T, Stage: StageFlag> = GenericNode<T, NonFailableFlag, AsyncFlag, Stage>
+//
+//public typealias AnyStagePromise<T, Stage: StageFlag> = GenericNode<T, FailableFlag, AsyncFlag, Stage>
 
 public typealias Value<T> = AnyStageValue<T, Thenable>
 public typealias Result<T> = AnyStageResult<T, Thenable>
