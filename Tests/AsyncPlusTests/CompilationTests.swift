@@ -31,10 +31,10 @@ extension Ensurable {
 
 extension Recoverable where T == Int {
     func customRecover() {
-        self.recoverEscaping {
-            err -> Int in
-            print(err)
-            return 42
-        }
+//        self.recoverEscaping {
+//            err -> Int in
+//            print(err)
+//            return 42
+//        }
     }
 }

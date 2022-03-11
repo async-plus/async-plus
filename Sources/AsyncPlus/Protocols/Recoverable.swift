@@ -16,25 +16,13 @@ public protocol Recoverable: Node {
     SelfNode.Fails == FailableFlag,
     SelfNode.Stage == Thenable
 
-    associatedtype SelfNonFailableAsync: Node where
-    SelfNonFailableAsync.T == T,
-    SelfNonFailableAsync.When == AsyncFlag,
-    SelfNonFailableAsync.Fails == NonFailableFlag,
-    SelfNonFailableAsync.Stage == Thenable
-
-    associatedtype SelfAsync: Node where
-    SelfAsync.T == T,
-    SelfAsync.When == AsyncFlag,
-    SelfAsync.Fails == FailableFlag,
-    SelfAsync.Stage == Thenable
-
     func recoverEscaping(_ body: @escaping (Error) -> T) -> SelfNonFailable
 
     func recoverEscaping(_ body: @escaping (Error) throws -> T) -> SelfNode
 
-    func recover(_ body: @escaping (Error) async -> T) -> SelfNonFailableAsync
+    func recover(_ body: @escaping (Error) async -> T) -> Guarantee<T>
 
-    func recover(_ body: @escaping (Error) async throws -> T) -> SelfAsync
+    func recover(_ body: @escaping (Error) async throws -> T) -> Promise<T>
 }
 
 extension AnyStageResult: Recoverable where Stage == Thenable {
@@ -43,13 +31,13 @@ extension AnyStageResult: Recoverable where Stage == Thenable {
     
 }
 
-//extension AnyStagePromise: Recoverable where Stage == Thenable {
-//
-//    public func recoverEscaping(_ body: @escaping (Error) -> T) -> Guarantee<T> {
-//        return recover(body)
-//    }
-//
-//    public func recoverEscaping(_ body: @escaping (Error) throws -> T) -> Promise<T> {
-//        return recover(body)
-//    }
-//}
+extension AnyStagePromise: Recoverable where Stage == Thenable {
+
+    public func recoverEscaping(_ body: @escaping (Error) -> T) -> Guarantee<T> {
+        return recover(body)
+    }
+
+    public func recoverEscaping(_ body: @escaping (Error) throws -> T) -> Promise<T> {
+        return recover(body)
+    }
+}
