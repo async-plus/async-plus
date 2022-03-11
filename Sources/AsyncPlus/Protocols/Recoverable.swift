@@ -38,16 +38,18 @@ public protocol Recoverable: Node {
 }
 
 extension AnyStageResult: Recoverable where Stage == Thenable {
+
+    
     
 }
 
-extension AnyStagePromise: Recoverable where Stage == Thenable {
-    
-    public func recoverEscaping(_ body: @escaping (Error) -> T) -> Guarantee<T> {
-        return recover(body)
-    }
-
-    public func recoverEscaping(_ body: @escaping (Error) throws -> T) -> Promise<T> {
-        return recover(body)
-    }
-}
+//extension AnyStagePromise: Recoverable where Stage == Thenable {
+//
+//    public func recoverEscaping(_ body: @escaping (Error) -> T) -> Guarantee<T> {
+//        return recover(body)
+//    }
+//
+//    public func recoverEscaping(_ body: @escaping (Error) throws -> T) -> Promise<T> {
+//        return recover(body)
+//    }
+//}

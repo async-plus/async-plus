@@ -16,16 +16,16 @@ extension Catchable {
 }
 
 extension Ensurable {
-    func delayThenCatch() {
-        self.ensure {
-            await mockSleep(seconds: 2)
-        }.catch {
-            err in
-            print(err)
-        }.finally {
-            print("DONE")
-        }
-    }
+//    func delayThenCatch() {
+//        self.ensure {
+//            await mockSleep(seconds: 2)
+//        }.catch {
+//            err in
+//            print(err)
+//        }.finally {
+//            print("DONE")
+//        }
+//    }
     
 }
 

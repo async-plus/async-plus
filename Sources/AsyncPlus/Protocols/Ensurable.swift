@@ -2,7 +2,7 @@ import Foundation
 
 // Note: For now, ensurable is a separate protocol from Catchable because in the future we may want to allow non-failable chains to use `ensure`.
 
-public protocol Ensurable: Node where Stage: Chainable, Fails == FailableFlag {
+public protocol Ensurable: Node {
     
     associatedtype SelfNode: Node where
     SelfNode.T == T,

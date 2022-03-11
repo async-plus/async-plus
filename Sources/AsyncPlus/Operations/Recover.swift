@@ -34,8 +34,8 @@ extension AnyStageResult where Stage == Thenable {
             return Value(body(error))
         }
     }
-
-    public func recoverEscaping(_ body: @escaping (Error) throws -> T) -> Result<T> {
+    
+    public func recoverEscaping(_ body: @escaping (Error) throws -> T) -> AnyStageResult<T, Thenable> {
         switch result {
         case .success(let value):
             return Result(.success(value))

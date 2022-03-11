@@ -110,17 +110,17 @@ public class AnyStagePromise<T, Stage: StageFlag>: Node {
     }
 }
 
-public typealias Value<T> = AnyStageValue<T, Thenable>
-public typealias Result<T> = AnyStageResult<T, Thenable>
-public typealias Guarantee<T> = AnyStageGuarantee<T, Thenable>
-public typealias Promise<T> = AnyStagePromise<T, Thenable>
+public class Value<T>: AnyStageValue<T, Thenable> {}
+public class Result<T>: AnyStageResult<T, Thenable> {}
+public class Guarantee<T>: AnyStageGuarantee<T, Thenable> {}
+public class Promise<T>: AnyStagePromise<T, Thenable> {}
 
-public typealias PartiallyCaughtResult<T> = AnyStageResult<T, PartiallyCaught>
-public typealias CaughtResult<T> = AnyStageResult<T, CompletelyCaught>
-public typealias PartiallyCaughtPromise<T> = AnyStagePromise<T, PartiallyCaught>
-public typealias CaughtPromise<T> = AnyStagePromise<T, CompletelyCaught>
+public class PartiallyCaughtResult<T>: AnyStageResult<T, PartiallyCaught> {}
+public class CaughtResult<T>: AnyStageResult<T, CompletelyCaught> {}
+public class PartiallyCaughtPromise<T>: AnyStagePromise<T, PartiallyCaught> {}
+public class CaughtPromise<T>: AnyStagePromise<T, CompletelyCaught> {}
 
-public typealias FinalizedValue<T> = AnyStageValue<T, Finalized>
-public typealias FinalizedResult<T> = AnyStageResult<T, Finalized>
-public typealias FinalizedGuarantee<T> = AnyStageGuarantee<T, Finalized>
-public typealias FinalizedPromise<T> = AnyStagePromise<T, Finalized>
+public class FinalizedValue<T>: AnyStageValue<T, Finalized> {}
+public class FinalizedResult<T>: AnyStageResult<T, Finalized> {}
+public class FinalizedGuarantee<T>: AnyStageGuarantee<T, Finalized> {}
+public class FinalizedPromise<T>: AnyStagePromise<T, Finalized> {}
