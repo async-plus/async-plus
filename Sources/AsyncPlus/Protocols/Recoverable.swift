@@ -1,6 +1,8 @@
 import Foundation
 
-public protocol Recoverable: Node where Fails == FailableFlag, Stage == Thenable {
+// Note: Specializing these protocols doesn't appear to work: see potential bug in Swift in the have-i-found-a-bug-in-swift branch
+
+public protocol Recoverable: Node {
 
     associatedtype SelfNonFailable: Node where
     SelfNonFailable.T == T,
@@ -35,17 +37,17 @@ public protocol Recoverable: Node where Fails == FailableFlag, Stage == Thenable
     func recover(_ body: @escaping (Error) async throws -> T) -> SelfAsync
 }
 
-//extension AnyStageResult: Recoverable where Stage == Thenable {
-//    
-//}
-//
-//extension AnyStagePromise: Recoverable where Stage == Thenable {
-//    
-//    public func recoverEscaping(_ body: @escaping (Error) -> T) -> Guarantee<T> {
-//        return recover(body)
-//    }
-//
-//    public func recoverEscaping(_ body: @escaping (Error) throws -> T) -> Promise<T> {
-//        return recover(body)
-//    }
-//}
+extension AnyStageResult: Recoverable where Stage == Thenable {
+    
+}
+
+extension AnyStagePromise: Recoverable where Stage == Thenable {
+    
+    public func recoverEscaping(_ body: @escaping (Error) -> T) -> Guarantee<T> {
+        return recover(body)
+    }
+
+    public func recoverEscaping(_ body: @escaping (Error) throws -> T) -> Promise<T> {
+        return recover(body)
+    }
+}

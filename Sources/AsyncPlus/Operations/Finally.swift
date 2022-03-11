@@ -46,7 +46,7 @@ extension AnyStageResult where Stage == CompletelyCaught {
     }
 }
 
-extension Guarantee {
+extension AnyStageGuarantee {
     
     @discardableResult
     public func finally(_ body: @escaping () -> ()) -> FinalizedGuarantee<T> {

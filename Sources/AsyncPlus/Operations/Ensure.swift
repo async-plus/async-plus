@@ -4,20 +4,6 @@ import Foundation
 
 // Note: No `ensure` function is marked with @discardableResult because `finally` is the preferred way of ending the chain.
 
-//extension AnyStageResult where Stage == Thenable {
-//
-//    public func ensure(_ body: () -> ()) -> Result<T> {
-//        body()
-//        return Result(result)
-//    }
-//
-//    public func ensure(_ body: @escaping () async -> ()) -> Promise<T> {
-//        return Promise(Task.init {
-//            return try await ensureAsyncBody(body, result: result)
-//        })
-//    }
-//}
-
 extension AnyStageResult where Stage: Chainable {
 
     public func ensure(_ body: @escaping () -> ()) -> AnyStageResult<T, Stage> {
@@ -31,23 +17,6 @@ extension AnyStageResult where Stage: Chainable {
         })
     }
 }
-
-//extension AnyStagePromise where Stage == Thenable {
-//
-//    public func ensure(_ body: @escaping () -> ()) -> Promise<T> {
-//        return Promise<T>(Task.init {
-//            let result = await task.result
-//            body()
-//            return try result.get()
-//        })
-//    }
-//
-//    public func ensure(_ body: @escaping () async -> ()) -> Promise<T> {
-//        return Promise(Task.init {
-//            return try await ensureAsyncBody(body, result: await task.result)
-//        })
-//    }
-//}
 
 extension AnyStagePromise where Stage: Chainable {
 
