@@ -70,57 +70,45 @@ public protocol Node {
 //    }
 //}
 
-public class GenericNode<T, Fails: IsFailableFlag, When: WhenFlag, Stage: StageFlag>: Node {
+public class AnyStageValue<T, Stage: StageFlag>: Node {
+    public typealias Fails = NonFailableFlag
+    public typealias When = InstantFlag
     
-    internal let value: T!
-    internal let result: SimpleResult<T>!
-    internal let task: NonFailableTask<T>!
-    public let taskFailable: FailableTask<T>!
-    
+    public let value: T
     init(_ value: T) {
         self.value = value
-        result = nil
-        task = nil
-        taskFailable = nil
-    }
-    
-    init(_ result: SimpleResult<T>) {
-        value = nil
-        self.result = result
-        task = nil
-        taskFailable = nil
-    }
-    
-    init(_ task: NonFailableTask<T>) {
-        value = nil
-        result = nil
-        self.task = task
-        taskFailable = nil
-    }
-
-    init(_ taskFailable: FailableTask<T>) {
-        value = nil
-        result = nil
-        task = nil
-        self.taskFailable = taskFailable
     }
 }
 
-public class AnyStageValue<T, Stage: StageFlag>: GenericNode<T, NonFailableFlag, InstantFlag, Stage> {}
+public class AnyStageResult<T, Stage: StageFlag>: Node {
+    public typealias Fails = FailableFlag
+    public typealias When = InstantFlag
+    
+    public let result: SimpleResult<T>
+    init(_ result: SimpleResult<T>) {
+        self.result = result
+    }
+}
 
-public class AnyStageResult<T, Stage: StageFlag>: GenericNode<T, FailableFlag, InstantFlag, Stage> {}
+public class AnyStageGuarantee<T, Stage: StageFlag>: Node {
+    public typealias Fails = NonFailableFlag
+    public typealias When = AsyncFlag
+    
+    public let task: NonFailableTask<T>
+    init(_ task: NonFailableTask<T>) {
+        self.task = task
+    }
+}
 
-public class AnyStageGuarantee<T, Stage: StageFlag>: GenericNode<T, NonFailableFlag, AsyncFlag, Stage> {}
-
-public class AnyStagePromise<T, Stage: StageFlag>: GenericNode<T, FailableFlag, AsyncFlag, Stage> {}
-
-//public typealias AnyStageValue<T, Stage: StageFlag> = GenericNode<T, NonFailableFlag, InstantFlag, Stage>
-//
-//public typealias AnyStageResult<T, Stage: StageFlag> = GenericNode<T, FailableFlag, InstantFlag, Stage>
-//
-//public typealias AnyStageGuarantee<T, Stage: StageFlag> = GenericNode<T, NonFailableFlag, AsyncFlag, Stage>
-//
-//public typealias AnyStagePromise<T, Stage: StageFlag> = GenericNode<T, FailableFlag, AsyncFlag, Stage>
+public class AnyStagePromise<T, Stage: StageFlag>: Node {
+    public typealias Fails = FailableFlag
+    public typealias When = AsyncFlag
+    
+    public let task: FailableTask<T>
+    init(_ taskFailable: FailableTask<T>) {
+        self.task = taskFailable
+    }
+}
 
 public typealias Value<T> = AnyStageValue<T, Thenable>
 public typealias Result<T> = AnyStageResult<T, Thenable>
