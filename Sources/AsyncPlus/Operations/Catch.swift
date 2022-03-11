@@ -2,7 +2,7 @@ import Foundation
 
 // Note: Catch operations with bodies that are non-throwing are marked with @discardableResult, because all errors are presumably handled. However, if a catch has a throwing body, then an error could still arise. This can be handled with a call to .throws() to progagate the error, or chained with another `catch` operation with a non-throwing body.
 
-extension AnyStageResult where Stage: Chainable {
+extension Node where Fails == FailableFlag, When == InstantFlag, Stage: Chainable {
     public typealias SelfCaught = CaughtResult<T>
     
     public typealias SelfPartiallyCaught = PartiallyCaughtResult<T>
