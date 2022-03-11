@@ -1,57 +1,42 @@
 import Foundation
 
-// TYPE FLAGS
-public class StageFlag {}
-public class Chainable: StageFlag {}
-public final class Thenable: Chainable {}
-public final class CompletelyCaught: Chainable {}
-
-// NODE
-public protocol Node {
-    associatedtype Stage: StageFlag
+protocol Node {
+    associatedtype IntOrString
 }
 
-public class AnyStageResult<Stage: StageFlag>: Node {
-
+// Any node can produce int nodes...
+protocol CanProduceIntNode: Node {
+    
+    associatedtype IntNode: Node where
+    IntNode.IntOrString == Int
+    
+    func produceIntNode() -> IntNode
 }
 
-public typealias Result = AnyStageResult<Thenable>
-public typealias CaughtResult = AnyStageResult<CompletelyCaught>
+// ... but only string nodes can produce more string nodes
+protocol CanProduceStringNode: Node where IntOrString == String {
 
-// CATCH
-public protocol Catchable: Node where Stage: Chainable {
-    
-    associatedtype SelfCaught: Node where
-    SelfCaught.Stage == CompletelyCaught
-    
-    @discardableResult
-    func catchEscaping(_ body: @escaping (Error) -> ()) -> SelfCaught
+    associatedtype StringNode: Node where
+    StringNode.IntOrString == String
 
+    func produceStringNode() -> StringNode
 }
 
-extension AnyStageResult: Catchable where Stage: Chainable {
-    public typealias SelfCaught = CaughtResult
+// Make a generic class that conforms to Node, and CanProduceIntNode
+class GenericNode<IntOrString>: Node, CanProduceIntNode {
     
-    @discardableResult
-    public func catchEscaping(_ body: @escaping (Error) -> ()) -> CaughtResult {
-        
-        return CaughtResult()
+    typealias IntNode = GenericNode<Int>
+
+    func produceIntNode() -> IntNode {
+        return IntNode()
     }
 }
 
-// RECOVER
-public protocol Recoverable: Node where Stage == Thenable {
-
-    associatedtype SelfNode: Node where
-    SelfNode.Stage == Thenable
-
-    func recoverEscaping(_ body: @escaping (Error) throws -> ()) -> SelfNode
-}
-
-// Comment this out for passing build
-extension AnyStageResult: Recoverable where Stage == Thenable {
-
-    public func recoverEscaping(_ body: @escaping (Error) throws -> ()) -> Result {
-        return Result()
+// Comment the below out for a passing build
+extension GenericNode: CanProduceStringNode where IntOrString == String {
+    typealias StringNode = GenericNode<String>
+    
+    func produceStringNode() -> StringNode {
+        return StringNode()
     }
 }
