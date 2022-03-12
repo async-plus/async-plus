@@ -1,6 +1,6 @@
 import Foundation
 
-public protocol Catchable: Failable, Chainable {
+public protocol Catchable: Failable, Chainable where T == () {
     
     associatedtype SelfCaught: CompletelyCaught, Catchable
     associatedtype SelfPartiallyCaught: PartiallyCaught, Catchable
@@ -17,12 +17,12 @@ public protocol Catchable: Failable, Chainable {
 }
 
 
-extension ChainableResult: Catchable {
+extension ChainableResult: Catchable where T == () {
     public typealias SelfCaught = CaughtResult<T>
     public typealias SelfPartiallyCaught = PartiallyCaughtResult<T>
 }
 
-extension ChainablePromise: Catchable {
+extension ChainablePromise: Catchable where T == () {
     public typealias SelfCaught = CaughtPromise<T>
     public typealias SelfPartiallyCaught = PartiallyCaughtPromise<T>
 }

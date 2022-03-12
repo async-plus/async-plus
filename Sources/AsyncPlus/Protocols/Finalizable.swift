@@ -1,6 +1,6 @@
 import Foundation
 
-protocol Finalizable: Node { // where Stage == CompletelyCaught OR Fails == NonFailableFlag
+public protocol Finalizable: Node { // where Self: CompletelyCaught OR Self: NonFailable
     
     associatedtype SelfFinalized: Node
     associatedtype SelfAsyncFinalized: Async
@@ -25,7 +25,7 @@ extension ChainableGuarantee: Finalizable {
     }
 }
 
-extension AnyStagePromise: Finalizable where Stage == CompletelyCaught {
+extension CaughtPromise: Finalizable {
     @discardableResult
     public func finallyEscaping(_ body: @escaping () -> ()) -> FinalizedPromise<T> {
         return finally(body)
