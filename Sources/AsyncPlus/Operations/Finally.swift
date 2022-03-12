@@ -14,17 +14,15 @@ public protocol Finalizable: Node { // where Self: CompletelyCaught OR Self: Non
 
 extension ChainableValue: Finalizable {
     
+    // pattern:finally
     @discardableResult
     public func finally(_ body: () -> ()) -> FinalizedValue<T> {
         body()
         return FinalizedValue<T>(value)
     }
+    // endpattern
     
-    @discardableResult
-    public func finallyEscaping(_ body: @escaping () -> ()) -> FinalizedValue<T> {
-        body()
-        return FinalizedValue<T>(value)
-    }
+    // generate:finally(func finally => func finallyEscaping, body: => body: @escaping)
     
     @discardableResult
     public func finally(_ body: @escaping () async -> ()) -> FinalizedGuarantee<T> {
@@ -33,21 +31,28 @@ extension ChainableValue: Finalizable {
             return value
         })
     }
+
+    // GENERATED
+    @discardableResult
+    public func finallyEscaping(_ body: @escaping () -> ()) -> FinalizedValue<T> {
+        body()
+        return FinalizedValue<T>(value)
+    }
+    
+    // END GENERATED
 }
 
 extension CaughtResult: Finalizable {
     
+    // pattern:finally
     @discardableResult
     public func finally(_ body: () -> ()) -> FinalizedResult<T> {
         body()
         return FinalizedResult(result)
     }
+    // endpattern
     
-    @discardableResult
-    public func finallyEscaping(_ body: @escaping () -> ()) -> FinalizedResult<T> {
-        body()
-        return FinalizedResult(result)
-    }
+    // generate:finally(func finally => func finallyEscaping, body: => body: @escaping)
     
     @discardableResult
     public func finally(_ body: @escaping () async -> ()) -> FinalizedPromise<T> {
@@ -56,6 +61,15 @@ extension CaughtResult: Finalizable {
             return try result.get()
         })
     }
+
+    // GENERATED
+    @discardableResult
+    public func finallyEscaping(_ body: @escaping () -> ()) -> FinalizedResult<T> {
+        body()
+        return FinalizedResult(result)
+    }
+    
+    // END GENERATED
 }
 
 extension ChainableGuarantee: Finalizable {

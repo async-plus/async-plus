@@ -18,6 +18,7 @@ public protocol Recoverable: Failable, Thenable {
 
 extension Result: Recoverable {
 
+    // pattern:recover
     public func recover(_ body: (Error) -> T) -> Value<T> {
         switch result {
         case .success(let value):
@@ -26,16 +27,11 @@ extension Result: Recoverable {
             return Value(body(error))
         }
     }
+    // endpattern
     
-    public func recoverEscaping(_ body: @escaping (Error) -> T) -> Value<T> {
-        switch result {
-        case .success(let value):
-            return Value(value)
-        case .failure(let error):
-            return Value(body(error))
-        }
-    }
+    // generate:recover(func recover => func recoverEscaping, body: => body: @escaping)
 
+    // pattern:recoverThrows
     public func recover(_ body: (Error) throws -> T) -> Result<T> {
         switch result {
         case .success(let value):
@@ -46,6 +42,31 @@ extension Result: Recoverable {
             } catch {
                 return Result(.failure(error))
             }
+        }
+    }
+    // endpattern
+    
+    // generate:recoverThrows(func recover => func recoverEscaping, body: => body: @escaping)
+
+    public func recover(_ body: @escaping (Error) async -> T) -> Guarantee<T> {
+        return Guarantee<T>(Task.init {
+            await recoverAsyncBody(body, result: result)
+        })
+    }
+
+    public func recover(_ body: @escaping (Error) async throws -> T) -> Promise<T> {
+        return Promise<T>(Task.init {
+            try await recoverAsyncThrowsBody(body, result: result)
+        })
+    }
+
+    // GENERATED
+    public func recoverEscaping(_ body: @escaping (Error) -> T) -> Value<T> {
+        switch result {
+        case .success(let value):
+            return Value(value)
+        case .failure(let error):
+            return Value(body(error))
         }
     }
     
@@ -61,18 +82,8 @@ extension Result: Recoverable {
             }
         }
     }
-
-    public func recover(_ body: @escaping (Error) async -> T) -> Guarantee<T> {
-        return Guarantee<T>(Task.init {
-            await recoverAsyncBody(body, result: result)
-        })
-    }
-
-    public func recover(_ body: @escaping (Error) async throws -> T) -> Promise<T> {
-        return Promise<T>(Task.init {
-            try await recoverAsyncThrowsBody(body, result: result)
-        })
-    }
+    
+    // END GENERATED
 }
 
 extension Promise: Recoverable {

@@ -16,8 +16,8 @@ func runCodeGen(_ fileContents: String) -> String {
     
     var cgPatterns: [String: String] = [:]
     
-    // Look for cg:pattern's
-    let pattern1 = #"\/\/ cg:pattern:([\w\d]+)\n((?:(?!\/\/ cg:endpattern).|\n)*)\/\/ cg:endpattern"#
+    // Look for pattern's
+    let pattern1 = #"\/\/ pattern:([\w\d]+)\n((?:(?!\/\/ endpattern).|\n)*)\/\/ endpattern"#
     let regex1 = try! NSRegularExpression(pattern: pattern1, options: .anchorsMatchLines)
     let matches: [NSTextCheckingResult] = regex1.matches(in: fileContents, range: fileRange)
     
@@ -28,7 +28,7 @@ func runCodeGen(_ fileContents: String) -> String {
     
     // Determine what to codegen
     var codeGen = ""
-    let pattern2 = #"\/\/ cg:generate:([\w\d]+)\(((?:\\\)|[^\)])*)\)"#
+    let pattern2 = #"\/\/ generate:([\w\d]+)\(((?:\\\)|[^\)])*)\)"#
     let regex2 = try! NSRegularExpression(pattern: pattern2, options: .anchorsMatchLines)
     let matches2: [NSTextCheckingResult] = regex2.matches(in: fileContents, range: fileRange)
     for match in matches2 {
@@ -36,7 +36,7 @@ func runCodeGen(_ fileContents: String) -> String {
         let cgPatternName = submatches[1]
         let substitutionRules = submatches[2]
         guard let cgPatternBody = cgPatterns[cgPatternName] else {
-            fatalError("Unknown cg:pattern name \(cgPatternName)")
+            fatalError("Unknown pattern name \(cgPatternName)")
         }
         
         // Commas within substitution rules need to be escaped with \,
@@ -58,12 +58,12 @@ func runCodeGen(_ fileContents: String) -> String {
     }
     
     // Output with codegen
-    let pattern = #"\/\/ cg:start\n((?!\/\/ cg:end)(.|\n))*\/\/ cg:end"#
+    let pattern = #"\/\/ GENERATED\n((?!\/\/ END GENERATED)(.|\n))*\/\/ END GENERATED"#
     let regex = try! NSRegularExpression(pattern: pattern, options: .anchorsMatchLines)
     
     let substitutionString = """
-    // cg:start
-    \(codeGen)    // cg:end
+    // GENERATED
+    \(codeGen)    // END GENERATED
     """
     return regex.stringByReplacingMatches(in: fileContents, range: fileRange, withTemplate: substitutionString)
 }
@@ -105,8 +105,8 @@ final class CodeGen: XCTestCase {
             for line in fileContents.components(separatedBy: .newlines) {
                 
                 if line.starts(with: "}") {
-                    if runningTLD.contains("// cg:generate") &&  !runningTLD.contains("// cg:start") {
-                        runningTLD += "\n    // cg:start\n    // cg:end\n"
+                    if runningTLD.contains("// generate:") &&  !runningTLD.contains("// GENERATED") {
+                        runningTLD += "\n    // GENERATED\n    // END GENERATED\n"
                     }
                     runningTLD += line + "\n"
                     result += runCodeGen(runningTLD)

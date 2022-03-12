@@ -14,14 +14,14 @@ public protocol Ensurable: Failable, Chainable {
 }
 
 extension Ensurable where Self: HasResult {
-    // cg:pattern:ensure
+    // pattern:ensure
     public func ensure(_ body: () -> ()) -> Self {
         body()
         return Self(result)
     }
-    // cg:endpattern
+    // endpattern
 
-    // cg:generate:ensure(func ensure => func ensureEscaping, body: => body: @escaping)
+    // generate:ensure(func ensure => func ensureEscaping, body: => body: @escaping)
     
     public func ensure(_ body: @escaping () async -> ()) -> SelfAsync {
         return SelfAsync(Task.init {
@@ -29,13 +29,13 @@ extension Ensurable where Self: HasResult {
         })
     }
 
-    // cg:start
+    // GENERATED
     public func ensureEscaping(_ body: @escaping () -> ()) -> Self {
         body()
         return Self(result)
     }
     
-    // cg:end
+    // END GENERATED
 }
 
 extension Result: Ensurable {

@@ -23,7 +23,7 @@ extension ChainableResult: Catchable where T == () {
     public typealias SelfCaught = CaughtResult<T>
     public typealias SelfPartiallyCaught = PartiallyCaughtResult<T>
     
-    // cg:pattern:catch
+    // pattern:catch
     @discardableResult
     public func `catch`(_ body: (Error) -> ()) -> CaughtResult<T> {
         if case .failure(let error) = result {
@@ -31,11 +31,11 @@ extension ChainableResult: Catchable where T == () {
         }
         return CaughtResult(result)
     }
-    // cg:endpattern
+    // endpattern
     
-    // cg:generate:catch(func `catch` => func catchEscaping, body: => body: @escaping)
+    // generate:catch(func `catch` => func catchEscaping, body: => body: @escaping)
 
-    // cg:pattern:catchThrows
+    // pattern:catchThrows
     public func `catch`(_ body: (Error) throws -> ()) -> PartiallyCaughtResult<T> {
         do {
             if case .failure(let error) = result {
@@ -46,9 +46,9 @@ extension ChainableResult: Catchable where T == () {
             return PartiallyCaughtResult(.failure(error))
         }
     }
-    // cg:endpattern
+    // endpattern
     
-    // cg:generate:catchThrows(func `catch` => func catchEscaping, body: => body: @escaping)
+    // generate:catchThrows(func `catch` => func catchEscaping, body: => body: @escaping)
 
     @discardableResult
     public func `catch`(_ body: @escaping (Error) async /*safe*/ -> ()) -> CaughtPromise<T> {
@@ -63,7 +63,7 @@ extension ChainableResult: Catchable where T == () {
         })
     }
     
-    // cg:start
+    // GENERATED
     @discardableResult
     public func catchEscaping(_ body: @escaping (Error) -> ()) -> CaughtResult<T> {
         if case .failure(let error) = result {
@@ -83,7 +83,7 @@ extension ChainableResult: Catchable where T == () {
         }
     }
     
-    // cg:end
+    // END GENERATED
 }
 
 extension ChainablePromise: Catchable where T == () {
