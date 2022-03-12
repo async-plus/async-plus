@@ -119,7 +119,7 @@ final class CodeGen: XCTestCase {
             result += runCodeGen(runningTLD)
             
             // Write file
-            try! result.write(to: fileURL, atomically: false, encoding: .utf8)
+            try! result.dropLast().write(to: fileURL, atomically: false, encoding: .utf8)
         }
         
         print("DONE")

@@ -64,6 +64,26 @@ extension ChainableResult: Catchable where T == () {
     }
     
     // cg:start
+    @discardableResult
+    public func catchEscaping(_ body: @escaping (Error) -> ()) -> CaughtResult<T> {
+        if case .failure(let error) = result {
+            body(error)
+        }
+        return CaughtResult(result)
+    }
+    
+    public func catchEscaping(_ body: @escaping (Error) throws -> ()) -> PartiallyCaughtResult<T> {
+        do {
+            if case .failure(let error) = result {
+                try body(error)
+            }
+            return(PartiallyCaughtResult(result))
+        } catch {
+            return PartiallyCaughtResult(.failure(error))
+        }
+    }
+    
+
     // cg:end
 }
 
