@@ -23,6 +23,7 @@ public protocol HasValue: NonFailable, Instant {
 
 public protocol HasResult: Failable, Instant {
     var result: SimpleResult<T> { get }
+    init(_ result: SimpleResult<T>)
 }
 
 extension HasResult {
@@ -57,6 +58,7 @@ extension HasNonFailableTask {
 
 public protocol HasFailableTask: Failable, Async {
     var task: FailableTask<T> { get }
+    init(_ task: FailableTask<T>)
 }
 extension HasFailableTask {
     public func asyncThrows() async throws -> T {
@@ -88,7 +90,7 @@ public class AnyStageValue<T>: HasValue {
 public class AnyStageResult<T>: HasResult {
 
     public let result: SimpleResult<T>
-    init(_ result: SimpleResult<T>) {
+    public required init(_ result: SimpleResult<T>) {
         self.result = result
     }
 }
@@ -104,8 +106,8 @@ public class AnyStageGuarantee<T>: HasNonFailableTask {
 public class AnyStagePromise<T>: HasFailableTask {
 
     public let task: FailableTask<T>
-    init(_ taskFailable: FailableTask<T>) {
-        self.task = taskFailable
+    public required init(_ task: FailableTask<T>) {
+        self.task = task
     }
 }
 

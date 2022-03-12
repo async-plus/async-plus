@@ -51,7 +51,7 @@ extension ChainableResult: Catchable where T == () {
     // cg:generate:catchThrows(func `catch` => func catchEscaping, body: => body: @escaping)
 
     @discardableResult
-    public func `catch`(_ body: @escaping (Error) async -> ()) -> CaughtPromise<T> {
+    public func `catch`(_ body: @escaping (Error) async /*safe*/ -> ()) -> CaughtPromise<T> {
         return CaughtPromise(Task.init {
             try await catchAsyncBody(body, result: result)
         })
@@ -83,7 +83,6 @@ extension ChainableResult: Catchable where T == () {
         }
     }
     
-
     // cg:end
 }
 

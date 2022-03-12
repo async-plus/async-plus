@@ -63,8 +63,7 @@ func runCodeGen(_ fileContents: String) -> String {
     
     let substitutionString = """
     // cg:start
-    \(codeGen)
-        // cg:end
+    \(codeGen)    // cg:end
     """
     return regex.stringByReplacingMatches(in: fileContents, range: fileRange, withTemplate: substitutionString)
 }
