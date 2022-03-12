@@ -3,21 +3,29 @@ import AppKit
 
 public protocol Node {
     associatedtype T
-    associatedtype Fails: IsFailableFlag
-    associatedtype When: WhenFlag
-    associatedtype Stage: StageFlag
 }
 
-public protocol IAnyStageValue: Node where Fails == NonFailableFlag, When == InstantFlag {
+public protocol Instant: Node {}
+public protocol Async: Node {}
+
+public protocol Failable: Node {}
+public protocol NonFailable: Node {}
+
+public protocol Chainable: Node {}
+public protocol Thenable: Chainable {}
+public protocol Caught: Chainable {}
+public protocol CompletelyCaught: Caught {}
+public protocol PartiallyCaught: Caught {}
+
+public protocol HasValue: NonFailable, Instant {
     var value: T { get }
-
 }
 
-public protocol IAnyStageResult: Node where Fails == FailableFlag, When == InstantFlag {
+public protocol HasResult: Failable, Instant {
     var result: SimpleResult<T> { get }
-
 }
-extension IAnyStageResult {
+
+extension HasResult {
     public func `throws`() throws -> T {
         switch result {
         case .success(let value):
@@ -37,21 +45,20 @@ extension IAnyStageResult {
     }
 }
 
-public protocol IAnyStageGuarantee: Node where Fails == NonFailableFlag, When == AsyncFlag {
+public protocol HasNonFailableTask: NonFailable, Async {
     var task: NonFailableTask<T> { get }
-
-
 }
-extension IAnyStageGuarantee {
+
+extension HasNonFailableTask {
     public func async() async -> T {
         return await task.value
     }
 }
 
-public protocol IAnyStagePromise: Node where Fails == FailableFlag, When == AsyncFlag {
+public protocol HasFailableTask: Failable, Async {
     var task: FailableTask<T> { get }
 }
-extension IAnyStagePromise {
+extension HasFailableTask {
     public func asyncThrows() async throws -> T {
         return try await task.value
     }
@@ -70,9 +77,7 @@ extension IAnyStagePromise {
     }
 }
 
-public class AnyStageValue<T, Stage: StageFlag>: Node {
-    public typealias Fails = NonFailableFlag
-    public typealias When = InstantFlag
+public class AnyStageValue<T>: HasValue {
     
     public let value: T
     init(_ value: T) {
@@ -80,19 +85,15 @@ public class AnyStageValue<T, Stage: StageFlag>: Node {
     }
 }
 
-public class AnyStageResult<T, Stage: StageFlag>: Node {
-    public typealias Fails = FailableFlag
-    public typealias When = InstantFlag
-    
+public class AnyStageResult<T>: HasResult {
+
     public let result: SimpleResult<T>
     init(_ result: SimpleResult<T>) {
         self.result = result
     }
 }
 
-public class AnyStageGuarantee<T, Stage: StageFlag>: Node {
-    public typealias Fails = NonFailableFlag
-    public typealias When = AsyncFlag
+public class AnyStageGuarantee<T>: HasNonFailableTask {
     
     public let task: NonFailableTask<T>
     init(_ task: NonFailableTask<T>) {
@@ -100,27 +101,30 @@ public class AnyStageGuarantee<T, Stage: StageFlag>: Node {
     }
 }
 
-public class AnyStagePromise<T, Stage: StageFlag>: Node {
-    public typealias Fails = FailableFlag
-    public typealias When = AsyncFlag
-    
+public class AnyStagePromise<T>: HasFailableTask {
+
     public let task: FailableTask<T>
     init(_ taskFailable: FailableTask<T>) {
         self.task = taskFailable
     }
 }
 
-public class Value<T>: AnyStageValue<T, Thenable> {}
-public class Result<T>: AnyStageResult<T, Thenable> {}
-public class Guarantee<T>: AnyStageGuarantee<T, Thenable> {}
-public class Promise<T>: AnyStagePromise<T, Thenable> {}
+public class ChainableValue<T>: AnyStageValue<T>, Chainable {}
+public class ChainableResult<T>: AnyStageResult<T>, Chainable {}
+public class ChainableGuarantee<T>: AnyStageGuarantee<T>, Chainable {}
+public class ChainablePromise<T>: AnyStagePromise<T>, Chainable {}
 
-public class PartiallyCaughtResult<T>: AnyStageResult<T, PartiallyCaught> {}
-public class CaughtResult<T>: AnyStageResult<T, CompletelyCaught> {}
-public class PartiallyCaughtPromise<T>: AnyStagePromise<T, PartiallyCaught> {}
-public class CaughtPromise<T>: AnyStagePromise<T, CompletelyCaught> {}
+public class Value<T>: ChainableValue<T>, Thenable {}
+public class Result<T>: ChainableResult<T>, Thenable {}
+public class Guarantee<T>: ChainableGuarantee<T>, Thenable {}
+public class Promise<T>: ChainablePromise<T>, Thenable {}
 
-public class FinalizedValue<T>: AnyStageValue<T, Finalized> {}
-public class FinalizedResult<T>: AnyStageResult<T, Finalized> {}
-public class FinalizedGuarantee<T>: AnyStageGuarantee<T, Finalized> {}
-public class FinalizedPromise<T>: AnyStagePromise<T, Finalized> {}
+public class PartiallyCaughtResult<T>: ChainableResult<T>, PartiallyCaught {}
+public class CaughtResult<T>: ChainableResult<T>, CompletelyCaught {}
+public class PartiallyCaughtPromise<T>: ChainablePromise<T>, PartiallyCaught {}
+public class CaughtPromise<T>: ChainablePromise<T>, CompletelyCaught {}
+
+public class FinalizedValue<T>: AnyStageValue<T> {}
+public class FinalizedResult<T>: AnyStageResult<T> {}
+public class FinalizedGuarantee<T>: AnyStageGuarantee<T> {}
+public class FinalizedPromise<T>: AnyStagePromise<T> {}

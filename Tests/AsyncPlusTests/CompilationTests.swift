@@ -7,15 +7,11 @@ extension Catchable {
         self.catchEscaping {
             err in
             print(err)
-        }.ensure {
-            print("Reported to Google")
-        }.finally {
-            print("Done")
         }
     }
 }
 
-extension Ensurable {
+//extension Ensurable {
 //    func delayThenCatch() {
 //        self.ensure {
 //            await mockSleep(seconds: 2)
@@ -26,15 +22,15 @@ extension Ensurable {
 //            print("DONE")
 //        }
 //    }
-    
-}
+//
+//}
 
-extension Recoverable where T == Int {
-    func customRecover() {
+//extension Recoverable where T == Int {
+//    func customRecover() {
 //        self.recoverEscaping {
 //            err -> Int in
 //            print(err)
 //            return 42
 //        }
-    }
-}
+//    }
+//}

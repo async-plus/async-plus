@@ -2,12 +2,8 @@ import Foundation
 
 // Note: Catch operations with bodies that are non-throwing are marked with @discardableResult, because all errors are presumably handled. However, if a catch has a throwing body, then an error could still arise. This can be handled with a call to .throws() to progagate the error, or chained with another `catch` operation with a non-throwing body.
 
-extension Node where Fails == FailableFlag, When == InstantFlag, Stage: Chainable {
-    public typealias SelfCaught = CaughtResult<T>
+extension Catchable where Self: HasResult {
     
-    public typealias SelfPartiallyCaught = PartiallyCaughtResult<T>
-    
-
     @discardableResult public func `catch`(_ body: (Error) -> ()) -> CaughtResult<T> {
         if case .failure(let error) = result {
             body(error)
@@ -26,7 +22,6 @@ extension Node where Fails == FailableFlag, When == InstantFlag, Stage: Chainabl
         }
     }
     
-    // TODO: Remove duplication somehow with code gen/macros. Sourcery doesn't handle overloads well so can't be used.
     @discardableResult
     public func catchEscaping(_ body: @escaping (Error) -> ()) -> CaughtResult<T> {
         
@@ -61,7 +56,7 @@ extension Node where Fails == FailableFlag, When == InstantFlag, Stage: Chainabl
     }
 }
 
-extension AnyStagePromise where Stage: Chainable  {
+extension Catchable where Self: HasFailableTask  {
 
     @discardableResult
     public func `catch`(_ body: @escaping (Error) -> ()) -> CaughtPromise<T> {
@@ -86,6 +81,15 @@ extension AnyStagePromise where Stage: Chainable  {
                 throw error
             }
         })
+    }
+    
+    @discardableResult
+    public func catchEscaping(_ body: @escaping (Error) -> ()) -> CaughtPromise<T> {
+        return self.catch(body)
+    }
+
+    public func catchEscaping(_ body: @escaping (Error) throws -> ()) -> PartiallyCaughtPromise<T> {
+        return self.catch(body)
     }
 
     @discardableResult
