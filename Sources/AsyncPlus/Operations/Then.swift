@@ -272,7 +272,7 @@ public protocol Thenable: Chainable {
 
 extension Promise {
 
-    // cg:pattern:"then"
+    // cg:pattern:then
     public func then<U>(_ body: @escaping (T) -> U) -> Promise<U> {
         return Promise<U>(Task.init {
             return body(try await task.value)

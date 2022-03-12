@@ -5,13 +5,6 @@ import XCTest
 func runCodeGen(_ fileContents: String) -> String {
     let fileRange = NSRange(location: 0, length: fileContents.utf16.count)
     
-    var cgPatterns: [String: String] = [:]
-    
-    // Look for cg:pattern's
-    let pattern1 = #"\/\/ cg:pattern:([\w\d]+)\n((?:(?!\/\/ cg:endpattern).|\n)*)\/\/ cg:endpattern"#
-    let regex1 = try! NSRegularExpression(pattern: pattern1, options: .anchorsMatchLines)
-    let matches: [NSTextCheckingResult] = regex1.matches(in: fileContents, range: fileRange)
-    
     func submatchesToString(match: NSTextCheckingResult) -> [String] {
         return (0..<match.numberOfRanges).map {
             i in
@@ -20,6 +13,13 @@ func runCodeGen(_ fileContents: String) -> String {
             return String(fileContents[range])
         }
     }
+    
+    var cgPatterns: [String: String] = [:]
+    
+    // Look for cg:pattern's
+    let pattern1 = #"\/\/ cg:pattern:([\w\d]+)\n((?:(?!\/\/ cg:endpattern).|\n)*)\/\/ cg:endpattern"#
+    let regex1 = try! NSRegularExpression(pattern: pattern1, options: .anchorsMatchLines)
+    let matches: [NSTextCheckingResult] = regex1.matches(in: fileContents, range: fileRange)
     
     for match: NSTextCheckingResult in matches {
         let submatches: [String] = submatchesToString(match: match)
@@ -54,13 +54,12 @@ func runCodeGen(_ fileContents: String) -> String {
             bodyWithSubs = bodyWithSubs.replacingOccurrences(of: lhs, with: rhs)
         }
         
-        codeGen += bodyWithSubs
+        codeGen += bodyWithSubs + "\n"
     }
     
-    // Output file with codegen
+    // Output with codegen
     let pattern = #"\/\/ cg:start\n((?!\/\/ cg:end)(.|\n))*\/\/ cg:end"#
     let regex = try! NSRegularExpression(pattern: pattern, options: .anchorsMatchLines)
-    
     
     let substitutionString = """
     // cg:start
@@ -99,11 +98,22 @@ final class CodeGen: XCTestCase {
             // Scan top level declaration. We rely on this repo having proper indentation levels for this to work.
             var result = ""
             var runningTLD = ""
+            
+            func finishTLD(_ line: String) {
+
+            }
+            
             for line in fileContents.components(separatedBy: .newlines) {
-                runningTLD += line
+                
                 if line.starts(with: "}") {
+                    if runningTLD.contains("// cg:generate") &&  !runningTLD.contains("// cg:start") {
+                        runningTLD += "\n    // cg:start\n    // cg:end\n"
+                    }
+                    runningTLD += line + "\n"
                     result += runCodeGen(runningTLD)
                     runningTLD = ""
+                } else {
+                    runningTLD += line + "\n"
                 }
             }
             result += runCodeGen(runningTLD)
