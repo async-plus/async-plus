@@ -2,9 +2,32 @@ import Foundation
 
 // Note: When you are using recover and T is void or (), then either 1) You are intending to stack on further operations after the correction, or 2) you could have used `catch`. For this reason, there are no @discardableResult recover functions. For this use case, catch should be used.
 
-extension Recoverable where Self: HasResult {
+public protocol Recoverable: Failable, Thenable {
+
+    associatedtype SelfNonFailable: NonFailable, Thenable where SelfNonFailable.T == T
+    associatedtype SelfNode: Failable, Thenable where SelfNode.T == T
+
+    func recoverEscaping(_ body: @escaping (Error) -> T) -> SelfNonFailable
+
+    func recoverEscaping(_ body: @escaping (Error) throws -> T) -> SelfNode
+
+    func recover(_ body: @escaping (Error) async -> T) -> Guarantee<T>
+
+    func recover(_ body: @escaping (Error) async throws -> T) -> Promise<T>
+}
+
+extension Result: Recoverable {
 
     public func recover(_ body: (Error) -> T) -> Value<T> {
+        switch result {
+        case .success(let value):
+            return Value(value)
+        case .failure(let error):
+            return Value(body(error))
+        }
+    }
+    
+    public func recoverEscaping(_ body: @escaping (Error) -> T) -> Value<T> {
         switch result {
         case .success(let value):
             return Value(value)
@@ -23,15 +46,6 @@ extension Recoverable where Self: HasResult {
             } catch {
                 return Result(.failure(error))
             }
-        }
-    }
-    
-    public func recoverEscaping(_ body: @escaping (Error) -> T) -> Value<T> {
-        switch result {
-        case .success(let value):
-            return Value(value)
-        case .failure(let error):
-            return Value(body(error))
         }
     }
     
@@ -61,7 +75,7 @@ extension Recoverable where Self: HasResult {
     }
 }
 
-extension Recoverable where Self: HasFailableTask {
+extension Promise: Recoverable {
 
     // These recover functions are async because the current result is already async.
     public func recover(_ body: @escaping (Error) -> T) -> Guarantee<T> {
@@ -74,6 +88,10 @@ extension Recoverable where Self: HasFailableTask {
             }
         })
     }
+    
+    public func recoverEscaping(_ body: @escaping (Error) -> T) -> Guarantee<T> {
+        return recover(body)
+    }
 
     public func recover(_ body: @escaping (Error) throws -> T) -> Promise<T> {
         return Promise<T>(Task.init {
@@ -84,6 +102,10 @@ extension Recoverable where Self: HasFailableTask {
                 return try body(errorOriginal)
             }
         })
+    }
+    
+    public func recoverEscaping(_ body: @escaping (Error) throws -> T) -> Promise<T> {
+        return recover(body)
     }
 
     public func recover(_ body: @escaping (Error) async -> T) -> Guarantee<T> {

@@ -2,6 +2,8 @@ import Foundation
 
 @testable import AsyncPlus
 
+// TODO: asVoid
+
 func test() {
     attempt {
         try await mockSleepThrowing(seconds: 1)

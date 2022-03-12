@@ -4,11 +4,28 @@ import Foundation
 
 // Note: No `ensure` function is marked with @discardableResult because `finally` is the preferred way of ending the chain.
 
-extension Ensurable where Self: HasResult, Self: Thenable {
+public protocol Ensurable: Failable, Chainable {
+    
+    associatedtype SelfNode: Ensurable where SelfNode.T == T
+    associatedtype SelfAsync: Async, Ensurable where SelfAsync.T == T
+    
+    func ensureEscaping(_ body: @escaping () -> ()) -> SelfNode
 
-    public func ensure(_ body: @escaping () -> ()) -> Result<T> {
+    func ensure(_ body: @escaping () async -> ()) -> SelfAsync
+}
+
+extension Result: Ensurable {
+
+    public typealias SelfNode = Result<T>
+    public typealias SelfAsync = Promise<T>
+    
+    public func ensure(_ body: () -> ()) -> Result<T> {
         body()
         return Result<T>(result)
+    }
+    
+    public func ensureEscaping(_ body: @escaping () -> ()) -> Result<T> {
+        return ensure(body)
     }
 
     public func ensure(_ body: @escaping () async -> ()) -> Promise<T> {
@@ -18,12 +35,19 @@ extension Ensurable where Self: HasResult, Self: Thenable {
     }
 }
 
-// TODO: Codegen
-extension Ensurable where Self: HasResult, Self: PartiallyCaught {
+// TODO: Remove duplicate code by a protocol extension of Ensurable where Self: HasResult - then make HasResult require a constructor
+extension PartiallyCaughtResult: Ensurable {
 
-    public func ensure(_ body: @escaping () -> ()) -> PartiallyCaughtResult<T> {
+    public typealias SelfNode = PartiallyCaughtResult<T>
+    public typealias SelfAsync = PartiallyCaughtPromise<T>
+    
+    public func ensure(_ body: () -> ()) -> PartiallyCaughtResult<T> {
         body()
         return PartiallyCaughtResult<T>(result)
+    }
+    
+    public func ensureEscaping(_ body: @escaping () -> ()) -> PartiallyCaughtResult<T> {
+        return ensure(body)
     }
 
     public func ensure(_ body: @escaping () async -> ()) -> PartiallyCaughtPromise<T> {
@@ -34,13 +58,20 @@ extension Ensurable where Self: HasResult, Self: PartiallyCaught {
 }
 
 // TODO: Codegen
-extension Ensurable where Self: HasResult, Self: CompletelyCaught {
+extension CaughtResult: Ensurable {
 
-    public func ensure(_ body: @escaping () -> ()) -> CaughtResult<T> {
+    public typealias SelfNode = CaughtResult<T>
+    public typealias SelfAsync = CaughtPromise<T>
+    
+    public func ensure(_ body: () -> ()) -> CaughtResult<T> {
         body()
         return CaughtResult<T>(result)
     }
-
+    
+    public func ensureEscaping(_ body: @escaping () -> ()) -> CaughtResult<T> {
+        return ensure(body)
+    }
+    
     public func ensure(_ body: @escaping () async -> ()) -> CaughtPromise<T> {
         return CaughtPromise<T>(Task.init {
             return try await ensureAsyncBody(body, result: result)
@@ -48,14 +79,21 @@ extension Ensurable where Self: HasResult, Self: CompletelyCaught {
     }
 }
 
-extension Ensurable where Self: HasFailableTask, Self: Thenable {
+extension Promise: Ensurable {
 
+    public typealias SelfNode = Promise<T>
+    public typealias SelfAsync = Promise<T>
+    
     public func ensure(_ body: @escaping () -> ()) -> Promise<T> {
         return Promise<T>(Task.init {
             let result = await task.result
             body()
             return try result.get()
         })
+    }
+    
+    public func ensureEscaping(_ body: @escaping () -> ()) -> Promise<T> {
+        return ensure(body)
     }
 
     public func ensure(_ body: @escaping () async -> ()) -> Promise<T> {
@@ -66,14 +104,21 @@ extension Ensurable where Self: HasFailableTask, Self: Thenable {
 }
 
 // TODO: Codegen
-extension Ensurable where Self: HasFailableTask, Self: PartiallyCaught {
+extension PartiallyCaughtPromise: Ensurable {
 
+    public typealias SelfNode = PartiallyCaughtPromise<T>
+    public typealias SelfAsync = PartiallyCaughtPromise<T>
+    
     public func ensure(_ body: @escaping () -> ()) -> PartiallyCaughtPromise<T> {
         return PartiallyCaughtPromise<T>(Task.init {
             let result = await task.result
             body()
             return try result.get()
         })
+    }
+    
+    public func ensureEscaping(_ body: @escaping () -> ()) -> PartiallyCaughtPromise<T> {
+        return ensure(body)
     }
 
     public func ensure(_ body: @escaping () async -> ()) -> PartiallyCaughtPromise<T> {
@@ -84,14 +129,21 @@ extension Ensurable where Self: HasFailableTask, Self: PartiallyCaught {
 }
 
 // TODO: Codegen
-extension Ensurable where Self: HasFailableTask, Self: CompletelyCaught {
+extension CaughtPromise: Ensurable {
 
+    public typealias SelfNode = CaughtPromise<T>
+    public typealias SelfAsync = CaughtPromise<T>
+    
     public func ensure(_ body: @escaping () -> ()) -> CaughtPromise<T> {
         return CaughtPromise<T>(Task.init {
             let result = await task.result
             body()
             return try result.get()
         })
+    }
+    
+    public func ensureEscaping(_ body: @escaping () -> ()) -> CaughtPromise<T> {
+        return ensure(body)
     }
 
     public func ensure(_ body: @escaping () async -> ()) -> CaughtPromise<T> {

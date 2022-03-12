@@ -1,7 +1,19 @@
 import Foundation
 
-extension Finalizable where Self: HasValue {
+public protocol Finalizable: Node { // where Self: CompletelyCaught OR Self: NonFailable
+    
+    associatedtype SelfFinalized: Node where SelfFinalized.T == T
+    associatedtype SelfAsyncFinalized: Async where SelfAsyncFinalized.T == T
+    
+    @discardableResult
+    func finallyEscaping(_ body: @escaping () -> ()) -> SelfFinalized
+    
+    @discardableResult
+    func finally(_ body: @escaping () async -> ()) -> SelfAsyncFinalized
+}
 
+extension ChainableValue: Finalizable {
+    
     @discardableResult
     public func finally(_ body: () -> ()) -> FinalizedValue<T> {
         body()
@@ -23,7 +35,7 @@ extension Finalizable where Self: HasValue {
     }
 }
 
-extension Finalizable where Self: HasResult {
+extension CaughtResult: Finalizable {
     
     @discardableResult
     public func finally(_ body: () -> ()) -> FinalizedResult<T> {
@@ -46,7 +58,7 @@ extension Finalizable where Self: HasResult {
     }
 }
 
-extension Finalizable where Self: HasNonFailableTask {
+extension ChainableGuarantee: Finalizable {
     
     @discardableResult
     public func finally(_ body: @escaping () -> ()) -> FinalizedGuarantee<T> {
@@ -55,6 +67,11 @@ extension Finalizable where Self: HasNonFailableTask {
             body()
             return value
         })
+    }
+    
+    @discardableResult
+    public func finallyEscaping(_ body: @escaping () -> ()) -> FinalizedGuarantee<T> {
+        return finally(body)
     }
     
     @discardableResult
@@ -67,7 +84,7 @@ extension Finalizable where Self: HasNonFailableTask {
     }
 }
 
-extension Finalizable where Self: HasFailableTask {
+extension CaughtPromise: Finalizable {
     
     @discardableResult
     public func finally(_ body: @escaping () -> ()) -> FinalizedPromise<T> {
@@ -76,6 +93,11 @@ extension Finalizable where Self: HasFailableTask {
             body()
             return try result.get()
         })
+    }
+    
+    @discardableResult
+    public func finallyEscaping(_ body: @escaping () -> ()) -> FinalizedPromise<T> {
+        return finally(body)
     }
     
     @discardableResult

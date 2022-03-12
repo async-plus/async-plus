@@ -12,7 +12,7 @@ public protocol Failable: Node {}
 public protocol NonFailable: Node {}
 
 public protocol Chainable: Node {}
-public protocol Thenable: Chainable {}
+// public protocol Thenable: Chainable {}
 public protocol Caught: Chainable {}
 public protocol CompletelyCaught: Caught {}
 public protocol PartiallyCaught: Caught {}

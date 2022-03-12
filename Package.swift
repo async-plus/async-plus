@@ -33,5 +33,10 @@ let package = Package(
             name: "AsyncPlusTests",
             dependencies: ["AsyncPlus"]
         ),
+        .testTarget(
+            name: "CodeGen",
+            dependencies: ["AsyncPlus"]
+            //dependencies: ["Stencil"]
+        )
     ]
 )

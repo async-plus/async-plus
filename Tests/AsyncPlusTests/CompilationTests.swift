@@ -11,8 +11,8 @@ extension Catchable {
     }
 }
 
-//extension Ensurable {
-//    func delayThenCatch() {
+extension Catchable {
+    func delayThenCatch() {
 //        self.ensure {
 //            await mockSleep(seconds: 2)
 //        }.catch {
@@ -21,16 +21,15 @@ extension Catchable {
 //        }.finally {
 //            print("DONE")
 //        }
-//    }
-//
-//}
+    }
+}
 
-//extension Recoverable where T == Int {
-//    func customRecover() {
-//        self.recoverEscaping {
-//            err -> Int in
-//            print(err)
-//            return 42
-//        }
-//    }
-//}
+extension Recoverable where T == Int {
+    func customRecover() {
+        self.recoverEscaping {
+            err -> Int in
+            print(err)
+            return 42
+        }
+    }
+}

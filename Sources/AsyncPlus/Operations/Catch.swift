@@ -2,9 +2,38 @@ import Foundation
 
 // Note: Catch operations with bodies that are non-throwing are marked with @discardableResult, because all errors are presumably handled. However, if a catch has a throwing body, then an error could still arise. This can be handled with a call to .throws() to progagate the error, or chained with another `catch` operation with a non-throwing body.
 
-extension Catchable where Self: HasResult {
+public protocol Catchable: Failable, Chainable where T == () {
     
-    @discardableResult public func `catch`(_ body: (Error) -> ()) -> CaughtResult<T> {
+    associatedtype SelfCaught: CompletelyCaught, Catchable
+    associatedtype SelfPartiallyCaught: PartiallyCaught, Catchable
+    
+    @discardableResult
+    func catchEscaping(_ body: @escaping (Error) -> ()) -> SelfCaught
+    
+    func catchEscaping(_ body: @escaping (Error) throws -> ()) -> SelfPartiallyCaught
+
+    @discardableResult
+    func `catch`(_ body: @escaping (Error) async -> ()) -> CaughtPromise<T>
+
+    func `catch`(_ body: @escaping (Error) async throws -> ()) -> PartiallyCaughtPromise<T>
+}
+
+extension ChainableResult: Catchable where T == () {
+    
+    public typealias SelfCaught = CaughtResult<T>
+    public typealias SelfPartiallyCaught = PartiallyCaughtResult<T>
+    
+    @discardableResult
+    public func `catch`(_ body: (Error) -> ()) -> CaughtResult<T> {
+        if case .failure(let error) = result {
+            body(error)
+        }
+        return CaughtResult(result)
+    }
+    
+    @discardableResult
+    public func catchEscaping(_ body: @escaping (Error) -> ()) -> CaughtResult<T> {
+        
         if case .failure(let error) = result {
             body(error)
         }
@@ -20,15 +49,6 @@ extension Catchable where Self: HasResult {
         } catch {
             return PartiallyCaughtResult(.failure(error))
         }
-    }
-    
-    @discardableResult
-    public func catchEscaping(_ body: @escaping (Error) -> ()) -> CaughtResult<T> {
-        
-        if case .failure(let error) = result {
-            body(error)
-        }
-        return CaughtResult(result)
     }
 
     public func catchEscaping(_ body: @escaping (Error) throws -> ()) -> PartiallyCaughtResult<T> {
@@ -56,8 +76,11 @@ extension Catchable where Self: HasResult {
     }
 }
 
-extension Catchable where Self: HasFailableTask  {
+extension ChainablePromise: Catchable where T == () {
 
+    public typealias SelfCaught = CaughtPromise<T>
+    public typealias SelfPartiallyCaught = PartiallyCaughtPromise<T>
+    
     @discardableResult
     public func `catch`(_ body: @escaping (Error) -> ()) -> CaughtPromise<T> {
         return CaughtPromise<T>(Task.init {
@@ -70,6 +93,11 @@ extension Catchable where Self: HasFailableTask  {
             }
         })
     }
+    
+    @discardableResult
+    public func catchEscaping(_ body: @escaping (Error) -> ()) -> CaughtPromise<T> {
+        return self.catch(body)
+    }
 
     public func `catch`(_ body: @escaping (Error) throws -> ()) -> PartiallyCaughtPromise<T> {
         return PartiallyCaughtPromise<T>(Task.init {
@@ -81,11 +109,6 @@ extension Catchable where Self: HasFailableTask  {
                 throw error
             }
         })
-    }
-    
-    @discardableResult
-    public func catchEscaping(_ body: @escaping (Error) -> ()) -> CaughtPromise<T> {
-        return self.catch(body)
     }
 
     public func catchEscaping(_ body: @escaping (Error) throws -> ()) -> PartiallyCaughtPromise<T> {
