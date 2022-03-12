@@ -280,10 +280,18 @@ extension Promise {
     }
     // cg:endpattern
     
-    // cg:generate:then(then -> thenEscaping)
+    // cg:generate:then(then => thenEscaping)
     
+    /* BEGIN GENERATED CODE */
     // cg:start
+    public func thenEscaping<U>(_ body: @escaping (T) -> U) -> Promise<U> {
+        return Promise<U>(Task.init {
+            return body(try await task.value)
+        })
+    }
+    
     // cg:end
+    /* END GENERATED CODE */
     
     public func thenEscaping<U, Result>(_ body: @escaping (T) -> U) -> Result where U == Result.T, Result : Chainable {
         return Promise<U>(Task.init {
