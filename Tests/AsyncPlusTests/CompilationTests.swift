@@ -13,14 +13,14 @@ extension Catchable {
 
 extension Catchable {
     func delayThenCatch() {
-//        self.ensure {
-//            await mockSleep(seconds: 2)
-//        }.catch {
-//            err in
-//            print(err)
-//        }.finally {
-//            print("DONE")
-//        }
+        self.ensure {
+            await mockSleep(seconds: 2)
+        }.catch {
+            err in
+            print(err)
+        }.finally {
+            print("DONE")
+        }
     }
 }
 
