@@ -54,6 +54,7 @@ final class CodeGen: XCTestCase {
         
         // Determine what to codegen
         var codeGenStrs: [String] = []
+        var previousRules: [String]? = nil
         for captureGroups in sourceStr.regexFind(#"\/\/ generate:([\w\d]+)\((.*)\)"#) {
             
             let patternName = captureGroups[1]
@@ -63,18 +64,24 @@ final class CodeGen: XCTestCase {
             }
             
             // Commas within substitution rules need to be escaped with \,
-            var rulesSplit = substitutionRules.splitOnUnescapedComma()
+            var rules = substitutionRules.splitOnUnescapedComma()
+            let rulesCopy = rules
             
             var bodyWithSubs = patternBody
 
-            while !rulesSplit.isEmpty {
-                let rule = rulesSplit.removeFirst()
+            while !rules.isEmpty {
+                let rule = rules.removeFirst()
                 
                 let parts: [String] = rule.components(separatedBy: " => ")
                 if parts.count == 1 {
                     // Expand this as a ruleset
-                    if let sub: String = ruleSets[rule] {
-                        rulesSplit = sub.splitOnUnescapedComma() + rulesSplit
+                    if rule == "..." {
+                        guard let previousRules = previousRules else {
+                            fatalError("Usage of ... requires previous statement of '// generate' defined in the same top-level declaration.")
+                        }
+                        rules = previousRules + rules
+                    } else if let sub: String = ruleSets[rule] {
+                        rules = sub.splitOnUnescapedComma() + rules
                     } else if rule.contains("->") {
                         fatalError("Use ' => ' not ' -> ' to make rules.")
                     } else {
@@ -90,6 +97,7 @@ final class CodeGen: XCTestCase {
                 bodyWithSubs = bodyWithSubs.replacingOccurrences(of: "/* \(lhs) */", with: rhs)
                 bodyWithSubs = bodyWithSubs.replacingOccurrences(of: lhs, with: rhs)
             }
+            previousRules = rulesCopy
             
             codeGenStrs.append(bodyWithSubs)
         }

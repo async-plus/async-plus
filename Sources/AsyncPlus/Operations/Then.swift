@@ -43,7 +43,7 @@ extension Value: Thenable {
     
     // generate:then(makeThenEscaping)
     // generate:then(body(value) => value, body? => body(value), makeSameType, makeDiscardable)
-    // generate:then(body(value) => value, body? => body(value), makeSameType, makeDiscardable, makeThenEscaping)
+    // generate:then(..., makeThenEscaping)
 
     // pattern:thenThrows
     public func then<U>(_ body: (T) throws -> U) -> Result<U> {
@@ -56,7 +56,9 @@ extension Value: Thenable {
     }
     // endpattern
     
+    // generate:thenThrows(makeThenEscaping)
     // generate:thenThrows(try body(value) => value, body? => try body(value), makeSameType)
+    // generate:thenThrows(..., makeThenEscaping)
 
     // pattern:thenAsync
     // discard?
@@ -100,7 +102,25 @@ extension Value: Thenable {
         return Value<T>(value)
     }
     
+    public func thenEscaping<U>(_ body: @escaping (T) throws -> U) -> Result<U> {
+        do {
+            // body?
+            return Result(.success(try body(value)))
+        } catch {
+            return Result(.failure(error))
+        }
+    }
+    
     public func then(_ body: (T) throws -> ()) -> Result<T> {
+        do {
+            try body(value)
+            return Result(.success(value))
+        } catch {
+            return Result(.failure(error))
+        }
+    }
+    
+    public func thenEscaping(_ body: @escaping (T) throws -> ()) -> Result<T> {
         do {
             try body(value)
             return Result(.success(value))
@@ -128,15 +148,21 @@ extension Value: Thenable {
 
 extension Result: Thenable {
 
-    
+    // pattern:then
     public func then<U>(_ body: (T) -> U) -> Result<U> {
         switch result {
         case .success(let value):
+            // body?
             return Result<U>(.success(body(value)))
         case .failure(let error):
             return Result<U>(.failure(error))
         }
     }
+    // endpattern
+    
+    // generate:then(makeThenEscaping)
+    // generate:then(body(value) => value, body? => body(value), makeSameType)
+    // generate:then(..., makeThenEscaping)
 
     public func then(_ body: (T) -> ()) -> Result<T> {
         switch result {
