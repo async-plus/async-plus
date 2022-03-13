@@ -6,14 +6,14 @@ import Foundation
 
 public protocol Ensurable: Failable, Chainable {
     
-    associatedtype SelfAsync: HasFailableTask, Ensurable where SelfAsync.T == T
+    associatedtype SelfAsync: IsPromise, Ensurable where SelfAsync.T == T
     
     func ensureEscaping(_ body: @escaping () -> ()) -> Self
 
     func ensure(_ body: @escaping () async -> ()) -> SelfAsync
 }
 
-extension Ensurable where Self: HasResult {
+extension Ensurable where Self: IsResult {
     // pattern:ensure
     public func ensure(_ body: () -> ()) -> Self {
         body()
@@ -40,23 +40,20 @@ extension Ensurable where Self: HasResult {
 
 extension Result: Ensurable {
 
-    public typealias SelfNode = Result<T>
     public typealias SelfAsync = Promise<T>
 }
 
 extension PartiallyCaughtResult: Ensurable {
 
-    public typealias SelfNode = PartiallyCaughtResult<T>
     public typealias SelfAsync = PartiallyCaughtPromise<T>
 }
 
 extension CaughtResult: Ensurable {
 
-    public typealias SelfNode = CaughtResult<T>
     public typealias SelfAsync = CaughtPromise<T>
 }
 
-extension Ensurable where Self: HasFailableTask {
+extension Ensurable where Self: IsPromise {
     
     public func ensure(_ body: @escaping () -> ()) -> Self {
         return Self(Task.init {
@@ -79,20 +76,17 @@ extension Ensurable where Self: HasFailableTask {
 
 extension Promise: Ensurable {
 
-    public typealias SelfNode = Promise<T>
     public typealias SelfAsync = Promise<T>
 }
 
 extension PartiallyCaughtPromise: Ensurable {
 
-    public typealias SelfNode = PartiallyCaughtPromise<T>
     public typealias SelfAsync = PartiallyCaughtPromise<T>
 }
 
 // TODO: Codegen
 extension CaughtPromise: Ensurable {
 
-    public typealias SelfNode = CaughtPromise<T>
     public typealias SelfAsync = CaughtPromise<T>
 }
 

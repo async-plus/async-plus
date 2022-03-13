@@ -33,7 +33,7 @@ extension ChainableResult: Catchable where T == () {
     }
     // endpattern
     
-    // generate:catch(func `catch` => func catchEscaping, body: => body: @escaping)
+    // generate:catch(func `catch` => func catchEscaping, makeEscaping)
 
     // pattern:catchThrows
     public func `catch`(_ body: (Error) throws -> ()) -> PartiallyCaughtResult<T> {

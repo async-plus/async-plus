@@ -5,11 +5,10 @@ import Foundation
 public protocol Recoverable: Failable, Thenable {
 
     associatedtype SelfNonFailable: NonFailable, Thenable where SelfNonFailable.T == T
-    associatedtype SelfNode: Failable, Thenable where SelfNode.T == T
 
     func recoverEscaping(_ body: @escaping (Error) -> T) -> SelfNonFailable
 
-    func recoverEscaping(_ body: @escaping (Error) throws -> T) -> SelfNode
+    func recoverEscaping(_ body: @escaping (Error) throws -> T) -> Self
 
     func recover(_ body: @escaping (Error) async -> T) -> Guarantee<T>
 
@@ -32,15 +31,15 @@ extension Result: Recoverable {
     // generate:recover(func recover => func recoverEscaping, body: => body: @escaping)
 
     // pattern:recoverThrows
-    public func recover(_ body: (Error) throws -> T) -> Result<T> {
+    public func recover(_ body: (Error) throws -> T) -> Self {
         switch result {
         case .success(let value):
-            return Result(.success(value))
+            return Self(.success(value))
         case .failure(let errorOriginal):
             do {
-                return Result(.success(try body(errorOriginal)))
+                return Self(.success(try body(errorOriginal)))
             } catch {
-                return Result(.failure(error))
+                return Self(.failure(error))
             }
         }
     }
@@ -70,15 +69,15 @@ extension Result: Recoverable {
         }
     }
     
-    public func recoverEscaping(_ body: @escaping (Error) throws -> T) -> Result<T> {
+    public func recoverEscaping(_ body: @escaping (Error) throws -> T) -> Self {
         switch result {
         case .success(let value):
-            return Result(.success(value))
+            return Self(.success(value))
         case .failure(let errorOriginal):
             do {
-                return Result(.success(try body(errorOriginal)))
+                return Self(.success(try body(errorOriginal)))
             } catch {
-                return Result(.failure(error))
+                return Self(.failure(error))
             }
         }
     }
@@ -104,8 +103,8 @@ extension Promise: Recoverable {
         return recover(body)
     }
 
-    public func recover(_ body: @escaping (Error) throws -> T) -> Promise<T> {
-        return Promise<T>(Task.init {
+    public func recover(_ body: @escaping (Error) throws -> T) -> Self {
+        return Self(Task.init {
             switch await task.result {
             case .success(let value):
                 return value
@@ -115,7 +114,7 @@ extension Promise: Recoverable {
         })
     }
     
-    public func recoverEscaping(_ body: @escaping (Error) throws -> T) -> Promise<T> {
+    public func recoverEscaping(_ body: @escaping (Error) throws -> T) -> Self {
         return recover(body)
     }
 

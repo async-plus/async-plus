@@ -2,77 +2,98 @@ import Foundation
 
 import XCTest
 
-func runCodeGen(_ fileContents: String) -> String {
-    let fileRange = NSRange(location: 0, length: fileContents.utf16.count)
+extension String {
     
-    func submatchesToString(match: NSTextCheckingResult) -> [String] {
-        return (0..<match.numberOfRanges).map {
-            i in
-            let rangeBounds = match.range(at: i)
-            let range = Range(rangeBounds, in: fileContents)!
-            return String(fileContents[range])
+    var fullRange: NSRange {
+        return NSRange(location: 0, length: self.utf16.count)
+    }
+    
+    /// Returns capture groups for each match
+    func regexFind(_ pattern: String) -> [[String]] {
+        
+        let regex = try! NSRegularExpression(pattern: pattern, options: .anchorsMatchLines)
+        let matches: [NSTextCheckingResult] = regex.matches(in: self, range: fullRange)
+        
+        return matches.map {
+            match in
+            return (0..<match.numberOfRanges).map {
+                i in
+                let rangeBounds = match.range(at: i)
+                let range = Range(rangeBounds, in: self)!
+                return String(self[range])
+            }
         }
     }
     
-    var cgPatterns: [String: String] = [:]
-    
-    // Look for pattern's
-    let pattern1 = #"\/\/ pattern:([\w\d]+)\n((?:(?!\/\/ endpattern).|\n)*)\/\/ endpattern"#
-    let regex1 = try! NSRegularExpression(pattern: pattern1, options: .anchorsMatchLines)
-    let matches: [NSTextCheckingResult] = regex1.matches(in: fileContents, range: fileRange)
-    
-    for match: NSTextCheckingResult in matches {
-        let submatches: [String] = submatchesToString(match: match)
-        cgPatterns[submatches[1]] = submatches[2]
+    func replacingRegex(_ pattern: String, with: String) -> String {
+        let regex = try! NSRegularExpression(pattern: pattern, options: .anchorsMatchLines)
+        return regex.stringByReplacingMatches(in: self, range: fullRange, withTemplate: with)
     }
-    
-    // Determine what to codegen
-    var codeGen = ""
-    let pattern2 = #"\/\/ generate:([\w\d]+)\(((?:\\\)|[^\)])*)\)"#
-    let regex2 = try! NSRegularExpression(pattern: pattern2, options: .anchorsMatchLines)
-    let matches2: [NSTextCheckingResult] = regex2.matches(in: fileContents, range: fileRange)
-    for match in matches2 {
-        let submatches = submatchesToString(match: match)
-        let cgPatternName = submatches[1]
-        let substitutionRules = submatches[2]
-        guard let cgPatternBody = cgPatterns[cgPatternName] else {
-            fatalError("Unknown pattern name \(cgPatternName)")
-        }
-        
-        // Commas within substitution rules need to be escaped with \,
-        let noCollisionForComma = "C$@CoMmM4A"
-        let safeSubs = substitutionRules.replacingOccurrences(of: #"\,"#, with: noCollisionForComma, options: .literal, range: nil)
-        let rulesSplit = safeSubs.components(separatedBy: ", ").map {
-            $0.replacingOccurrences(of: noCollisionForComma, with: ",", options: .literal, range: nil)
-        }
-        
-        var bodyWithSubs = cgPatternBody
-        for rule in rulesSplit {
-            let parts = rule.components(separatedBy: " => ")
-            let lhs = parts[0]
-            let rhs = parts[1]
-            bodyWithSubs = bodyWithSubs.replacingOccurrences(of: lhs, with: rhs)
-        }
-        
-        codeGen += bodyWithSubs + "\n"
-    }
-    
-    // Output with codegen
-    let pattern = #"\/\/ GENERATED\n((?!\/\/ END GENERATED)(.|\n))*\/\/ END GENERATED"#
-    let regex = try! NSRegularExpression(pattern: pattern, options: .anchorsMatchLines)
-    
-    let substitutionString = """
-    // GENERATED
-    \(codeGen)    // END GENERATED
-    """
-    return regex.stringByReplacingMatches(in: fileContents, range: fileRange, withTemplate: substitutionString)
 }
 
 final class CodeGen: XCTestCase {
     
-    // NOT A TEST: actually runs code generation
-    func testCodeGen() throws {
-
+    func runCodeGen(_ sourceStr: String, _ ruleSets: [String: String]) -> String {
+        
+        var definedPatterns: [String: String] = [:]
+        
+        // Look for patterns
+        for captureGroups in sourceStr.regexFind(#"\/\/ pattern:([\w\d]+)\n((?:(?!\/\/ endpattern).|\n)*)\/\/ endpattern"#) {
+            let patternName = captureGroups[1]
+            let pattern = captureGroups[2]
+            definedPatterns[patternName] = pattern
+        }
+        
+        // Determine what to codegen
+        var codeGenStrs: [String] = []
+        for captureGroups in sourceStr.regexFind(#"\/\/ generate:([\w\d]+)\((.*)\)"#) {
+            
+            let patternName = captureGroups[1]
+            let substitutionRules = captureGroups[2]
+            guard let patternBody = definedPatterns[patternName] else {
+                fatalError("Unknown pattern name \(patternName)")
+            }
+            
+            // Commas within substitution rules need to be escaped with \,
+            let noCollisionForComma = "C$@CoMmM4A"
+            let safeSubs = substitutionRules.replacingOccurrences(of: #"\,"#, with: noCollisionForComma, options: .literal, range: nil)
+            let rulesSplit = safeSubs.components(separatedBy: ", ").map {
+                $0.replacingOccurrences(of: noCollisionForComma, with: ",", options: .literal, range: nil)
+            }
+            
+            var bodyWithSubs = patternBody
+            let rulesExpandedWithRuleSets = rulesSplit.map {
+                (keyOrRule: String) -> String in
+                if let sub: String = ruleSets[keyOrRule] {
+                    return sub
+                } else {
+                    return keyOrRule
+                }
+            }
+            
+            for rule in rulesExpandedWithRuleSets {
+                
+                let parts = rule.components(separatedBy: " => ")
+                let lhs = parts[0]
+                let rhs = parts[1]
+                bodyWithSubs = bodyWithSubs.replacingOccurrences(of: "// \(lhs)\n", with: rhs + "\n")
+                bodyWithSubs = bodyWithSubs.replacingOccurrences(of: "/* \(lhs) */", with: rhs)
+                bodyWithSubs = bodyWithSubs.replacingOccurrences(of: lhs, with: rhs)
+            }
+            
+            codeGenStrs.append(bodyWithSubs)
+        }
+        
+        // Output with codegen
+        let replaceWith = """
+        // GENERATED
+        \(codeGenStrs.joined(separator: "\n"))    // END GENERATED
+        """
+        return sourceStr.replacingRegex(#"\/\/ GENERATED\n((?!\/\/ END GENERATED)(.|\n))*\/\/ END GENERATED"#, with: replaceWith)
+    }
+    
+    func forEverySourceFile(_ closure: (URL) -> ()) {
+        
         // Find source files
         let testsPath = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
         
@@ -91,16 +112,43 @@ final class CodeGen: XCTestCase {
                 continue
             }
             
+            closure(fileURL)
+        }
+    }
+
+    func getRuleSets() -> [String: String] {
+        var ruleSets: [String: String] = [:]
+        forEverySourceFile {
+            fileURL in
+            
+            // Read file
+            let fileContents = try! String(contentsOf: fileURL, encoding: .utf8)
+            
+            for captureGroups in fileContents.regexFind(#"\/\/ generate:([\w\d]+)\((.*)\)"#) {
+                
+                let ruleSetName = captureGroups[1]
+                let substitutionRules = captureGroups[2]
+                ruleSets[ruleSetName] = substitutionRules
+            }
+        }
+        return ruleSets
+    }
+    
+    // NOT A TEST: Actually runs code generation! Commit first!
+    func testCodeGen() throws {
+
+        let ruleSets = getRuleSets()
+        
+        forEverySourceFile {
+            fileURL in
+            
             // Read file
             let fileContents = try! String(contentsOf: fileURL, encoding: .utf8)
             
             // Scan top level declaration. We rely on this repo having proper indentation levels for this to work.
-            var result = ""
+            // TLD is a term used loosely
+            var transformedTLDs: [String] = []
             var runningTLD = ""
-            
-            func finishTLD(_ line: String) {
-
-            }
             
             for line in fileContents.components(separatedBy: .newlines) {
                 
@@ -109,16 +157,16 @@ final class CodeGen: XCTestCase {
                         runningTLD += "\n    // GENERATED\n    // END GENERATED\n"
                     }
                     runningTLD += line + "\n"
-                    result += runCodeGen(runningTLD)
+                    transformedTLDs.append(runCodeGen(runningTLD, ruleSets))
                     runningTLD = ""
                 } else {
                     runningTLD += line + "\n"
                 }
             }
-            result += runCodeGen(runningTLD)
+            transformedTLDs.append(runCodeGen(runningTLD, ruleSets))
             
-            // Write file
-            try! result.dropLast().write(to: fileURL, atomically: false, encoding: .utf8)
+            // Write file (dropLast \n)
+            try! transformedTLDs.joined(separator: "\n").write(to: fileURL, atomically: false, encoding: .utf8)
         }
         
         print("DONE")
