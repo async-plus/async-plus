@@ -29,6 +29,14 @@ extension String {
         let regex = try! NSRegularExpression(pattern: pattern, options: .anchorsMatchLines)
         return regex.stringByReplacingMatches(in: self, range: fullRange, withTemplate: with)
     }
+    
+    func splitOnUnescapedComma() -> [String] {
+        let noCollisionForComma = "C$@CoMmM4A"
+        let safeStr = self.replacingOccurrences(of: #"\,"#, with: noCollisionForComma, options: .literal, range: nil)
+        return safeStr.components(separatedBy: ", ").map {
+            $0.replacingOccurrences(of: noCollisionForComma, with: ",", options: .literal, range: nil)
+        }
+    }
 }
 
 final class CodeGen: XCTestCase {
@@ -55,19 +63,15 @@ final class CodeGen: XCTestCase {
             }
             
             // Commas within substitution rules need to be escaped with \,
-            let noCollisionForComma = "C$@CoMmM4A"
-            let safeSubs = substitutionRules.replacingOccurrences(of: #"\,"#, with: noCollisionForComma, options: .literal, range: nil)
-            let rulesSplit = safeSubs.components(separatedBy: ", ").map {
-                $0.replacingOccurrences(of: noCollisionForComma, with: ",", options: .literal, range: nil)
-            }
+            let rulesSplit = substitutionRules.splitOnUnescapedComma()
             
             var bodyWithSubs = patternBody
-            let rulesExpandedWithRuleSets = rulesSplit.map {
-                (keyOrRule: String) -> String in
+            var rulesExpandedWithRuleSets: [String] = []
+            for keyOrRule: String in rulesSplit {
                 if let sub: String = ruleSets[keyOrRule] {
-                    return sub
+                    rulesExpandedWithRuleSets += sub.splitOnUnescapedComma()
                 } else {
-                    return keyOrRule
+                    rulesExpandedWithRuleSets.append(keyOrRule)
                 }
             }
             

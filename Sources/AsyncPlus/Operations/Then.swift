@@ -27,6 +27,9 @@ public protocol Thenable: Chainable {
     func then(_ body: @escaping (T) async throws -> ()) -> Promise<T>
 }
 
+// ruleset:makeDiscardable(discard? => @discardableResult)
+// ruleset:makeSameType(body(value) => value, body? => body(value), -> U => -> (), then<U> => then, U => T)
+
 extension Value: Thenable {
 
     // pattern:then
@@ -37,7 +40,7 @@ extension Value: Thenable {
     }
     // endpattern
     
-    // generate:then(discard? => @discardableResult, body(value) => value, body? => body(value), -> U => -> (), then<U> => then, U => T)
+    // generate:then(makeSameType, makeDiscardable)
 
     // pattern:thenThrows
     public func then<U>(_ body: (T) throws -> U) -> Result<U> {

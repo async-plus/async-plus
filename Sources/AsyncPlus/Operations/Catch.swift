@@ -1,6 +1,6 @@
 import Foundation
 
-// Note: Catch operations with bodies that are non-throwing are marked with @discardableResult, because all errors are presumably handled. However, if a catch has a throwing body, then an error could still arise. This can be handled with a call to .throws() to progagate the error, or chained with another `catch` operation with a non-throwing body.
+// Note: Catch operations with bodies that are non-throwing are marked with @discardableResult, because all errors are presumably handled. However, if a catch has a throwing body, then an error could still arise. This can be handled with a call to .throws() to propagate the error, or chained with another `catch` operation with a non-throwing body.
 
 public protocol Catchable: Failable, Chainable where T == () {
     

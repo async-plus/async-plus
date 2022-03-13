@@ -83,7 +83,6 @@ extension PartiallyCaughtPromise: Ensurable {
     public typealias SelfAsync = PartiallyCaughtPromise<T>
 }
 
-// TODO: Codegen
 extension CaughtPromise: Ensurable {
 
     public typealias SelfAsync = CaughtPromise<T>

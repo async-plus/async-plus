@@ -86,7 +86,6 @@ extension Result: Recoverable {
 
 extension Promise: Recoverable {
 
-    // These recover functions are async because the current result is already async.
     public func recover(_ body: @escaping (Error) -> T) -> Guarantee<T> {
         return Guarantee<T>(Task.init {
             switch await task.result {
