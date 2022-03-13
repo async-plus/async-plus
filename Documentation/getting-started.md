@@ -49,4 +49,17 @@ attempt {
 }
 ```
 
-TODO: Update with a timing operation.
+To play around with the API you may find it useful to use the convenience `after` function, which waits a provided number of seconds:
+
+```swift
+attempt {
+    after(2.0)
+    return "Hello "
+}.then {
+    hello in 
+    print(hello + "World")
+}
+```
+
+
+
