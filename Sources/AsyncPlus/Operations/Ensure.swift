@@ -30,7 +30,7 @@ extension Ensurable where Self: IsResult {
     }
 
     // GENERATED
-    // Generated from ensure (func ensure => func ensureEscaping, makeEscaping)
+    // Generated from ensure
     public func ensureEscaping(_ body: @escaping () -> ()) -> Self {
         body()
         return Self(result)

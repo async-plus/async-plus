@@ -10,10 +10,10 @@ public protocol Thenable: Chainable {
 //    associatedtype SelfAsync: Async, Chainable where SelfAsync.T == T
     
     
-    //func thenEscaping<U, Result: Thenable>(_ body: @escaping (T) -> U) -> Result where Result.T == U
+//    func thenEscaping<U, Result: Thenable>(_ body: @escaping (T) -> U) -> Result where Result.T == U
 
-//    @discardableResult
-//    func thenEscaping(_ body: @escaping (T) -> ()) -> SelfNode
+    // @discardableResult
+    func thenEscaping(_ body: @escaping (T) -> ()) -> Self
 
     //func thenEscaping<U, Result: Thenable>(_ body: @escaping (T) throws -> ()) -> Result
     
@@ -30,6 +30,7 @@ public protocol Thenable: Chainable {
 // ruleset:makeDiscardable(discard? => @discardableResult)
 // ruleset:makeSameType(-> U => -> (), then<U> => then, U => T)
 // ruleset:makeThenEscapingCopy(func then => func thenEscaping, makeEscaping)
+// ruleset:makeThenEscapingCopyRenameOnly(func then => func thenEscaping)
 
 extension Value: Thenable {
 
@@ -43,7 +44,7 @@ extension Value: Thenable {
     
     // generate:then(makeThenEscapingCopy)
     // generate:then(body(value) => value, body? => body(value), makeSameType, makeDiscardable)
-    // generate:then(..., makeThenEscapingCopy)
+    // generate:then(..., makeThenEscapingCopy, Value<T> => Self)
 
     // pattern:thenThrows
     public func then<U>(_ body: (T) throws -> U) -> Result<U> {
@@ -84,28 +85,28 @@ extension Value: Thenable {
     // generate:thenAsyncThrows(try await body(value) => value, body? => try await body(value), makeSameType)
 
     // GENERATED
-    // Generated from then (makeThenEscapingCopy)
+    // Generated from then
     // discard?
     public func thenEscaping<U>(_ body: @escaping (T) -> U) -> Value<U> {
         // body?
         return Value<U>(body(value))
     }
     
-    // Generated from then (body(value) => value, body? => body(value), makeSameType, makeDiscardable)
+    // Generated from then
     @discardableResult
     public func then(_ body: (T) -> ()) -> Value<T> {
         body(value)
         return Value<T>(value)
     }
     
-    // Generated from then (..., makeThenEscapingCopy)
+    // Generated from then
     @discardableResult
-    public func thenEscaping(_ body: @escaping (T) -> ()) -> Value<T> {
+    public func thenEscaping(_ body: @escaping (T) -> ()) -> Self {
         body(value)
-        return Value<T>(value)
+        return Self(value)
     }
     
-    // Generated from thenThrows (makeThenEscapingCopy)
+    // Generated from thenThrows
     public func thenEscaping<U>(_ body: @escaping (T) throws -> U) -> Result<U> {
         do {
             // body?
@@ -115,7 +116,7 @@ extension Value: Thenable {
         }
     }
     
-    // Generated from thenThrows (try body(value) => value, body? => try body(value), makeSameType)
+    // Generated from thenThrows
     public func then(_ body: (T) throws -> ()) -> Result<T> {
         do {
             try body(value)
@@ -125,7 +126,7 @@ extension Value: Thenable {
         }
     }
     
-    // Generated from thenThrows (..., makeThenEscapingCopy)
+    // Generated from thenThrows
     public func thenEscaping(_ body: @escaping (T) throws -> ()) -> Result<T> {
         do {
             try body(value)
@@ -135,7 +136,7 @@ extension Value: Thenable {
         }
     }
     
-    // Generated from thenAsync (await body(value) => value, body? => await body(value), makeSameType, makeDiscardable)
+    // Generated from thenAsync
     @discardableResult
     public func then(_ body: @escaping (T) async -> ()) -> Guarantee<T> {
         return Guarantee<T>(Task.init {
@@ -144,7 +145,7 @@ extension Value: Thenable {
         })
     }
     
-    // Generated from thenAsyncThrows (try await body(value) => value, body? => try await body(value), makeSameType)
+    // Generated from thenAsyncThrows
     public func then(_ body: @escaping (T) async throws -> ()) -> Promise<T> {
         return Promise<T>(Task.init {
             try await body(value)
@@ -170,7 +171,7 @@ extension Result: Thenable {
     
     // generate:then(makeThenEscapingCopy)
     // generate:then(body(value) => value, body? => body(value), makeSameType)
-    // generate:then(..., makeThenEscapingCopy)
+    // generate:then(..., makeThenEscapingCopy, Result<T> => Self)
 
     // pattern:thenThrows
     public func then<U>(_ body: (T) throws -> U) -> Result<U> {
@@ -225,7 +226,7 @@ extension Result: Thenable {
     // generate:thenAsyncThrows(try await body(value) => value, body? => try await body(value), makeSameType)
 
     // GENERATED
-    // Generated from then (makeThenEscapingCopy)
+    // Generated from then
     public func thenEscaping<U>(_ body: @escaping (T) -> U) -> Result<U> {
         switch result {
         case .success(let value):
@@ -236,7 +237,7 @@ extension Result: Thenable {
         }
     }
     
-    // Generated from then (body(value) => value, body? => body(value), makeSameType)
+    // Generated from then
     public func then(_ body: (T) -> ()) -> Result<T> {
         switch result {
         case .success(let value):
@@ -247,18 +248,18 @@ extension Result: Thenable {
         }
     }
     
-    // Generated from then (..., makeThenEscapingCopy)
-    public func thenEscaping(_ body: @escaping (T) -> ()) -> Result<T> {
+    // Generated from then
+    public func thenEscaping(_ body: @escaping (T) -> ()) -> Self {
         switch result {
         case .success(let value):
             body(value)
-            return Result<T>(.success(value))
+            return Self(.success(value))
         case .failure(let error):
-            return Result<T>(.failure(error))
+            return Self(.failure(error))
         }
     }
     
-    // Generated from thenThrows (makeThenEscapingCopy)
+    // Generated from thenThrows
     public func thenEscaping<U>(_ body: @escaping (T) throws -> U) -> Result<U> {
         switch result {
         case .success(let value):
@@ -273,7 +274,7 @@ extension Result: Thenable {
         }
     }
     
-    // Generated from thenThrows (try body(value) => value, body? => try body(value), makeSameType)
+    // Generated from thenThrows
     public func then(_ body: (T) throws -> ()) -> Result<T> {
         switch result {
         case .success(let value):
@@ -288,7 +289,7 @@ extension Result: Thenable {
         }
     }
     
-    // Generated from thenThrows (..., makeThenEscapingCopy)
+    // Generated from thenThrows
     public func thenEscaping(_ body: @escaping (T) throws -> ()) -> Result<T> {
         switch result {
         case .success(let value):
@@ -303,7 +304,7 @@ extension Result: Thenable {
         }
     }
     
-    // Generated from thenAsync (await body(value) => value, body? => await body(value), makeSameType)
+    // Generated from thenAsync
     public func then(_ body: @escaping (T) async -> ()) -> Promise<T> {
         return Promise<T>(Task.init {
             switch result {
@@ -316,7 +317,7 @@ extension Result: Thenable {
         })
     }
     
-    // Generated from thenAsyncThrows (try await body(value) => value, body? => try await body(value), makeSameType)
+    // Generated from thenAsyncThrows
     public func then(_ body: @escaping (T) async throws -> ()) -> Promise<T> {
         return Promise<T>(Task.init {
             switch result {
@@ -349,7 +350,7 @@ extension Guarantee: Thenable {
     
     // generate:then(makeThenEscapingAlias)
     // generate:then(body(await task.value) => value, body? => let value = await task.value; body(value), makeSameType, makeDiscardable)
-    // generate:then(..., makeThenEscapingAlias)
+    // generate:then(..., makeThenEscapingCopyRenameOnly, Guarantee<T> => Self)
 
     // pattern:thenThrows
     public func then<U>(_ body: @escaping (T) throws -> U) -> Promise<U> {
@@ -388,11 +389,11 @@ extension Guarantee: Thenable {
     // generate:thenAsyncThrows(try await body(await task.value) => value, body? => let value = await task.value; try await body(value), makeSameType)
 
     // GENERATED
-    // Generated from then (makeThenEscapingAlias)
+    // Generated from then
     // discard?
     public func thenEscaping<U>(_ body: @escaping (T) -> U) -> Guarantee<U> { return then(body) }
     
-    // Generated from then (body(await task.value) => value, body? => let value = await task.value; body(value), makeSameType, makeDiscardable)
+    // Generated from then
     @discardableResult
     public func then(_ body: @escaping (T) -> ()) -> Guarantee<T> {
         return Guarantee<T>(Task.init {
@@ -401,14 +402,19 @@ extension Guarantee: Thenable {
         })
     }
     
-    // Generated from then (..., makeThenEscapingAlias)
+    // Generated from then
     @discardableResult
-    public func thenEscaping(_ body: @escaping (T) -> ()) -> Guarantee<T> { return then(body) }
+    public func thenEscaping(_ body: @escaping (T) -> ()) -> Self {
+        return Self(Task.init {
+            let value = await task.value; body(value)
+            return value
+        })
+    }
     
-    // Generated from thenThrows (makeThenEscapingAlias)
+    // Generated from thenThrows
     public func thenEscaping<U>(_ body: @escaping (T) throws -> U) -> Promise<U> { return then(body) }
     
-    // Generated from thenThrows (try body(await task.value) => value, body? => let value = await task.value; try body(value), makeSameType)
+    // Generated from thenThrows
     public func then(_ body: @escaping (T) throws -> ()) -> Promise<T> {
         return Promise<T>(Task.init {
             let value = await task.value; try body(value)
@@ -416,10 +422,10 @@ extension Guarantee: Thenable {
         })
     }
     
-    // Generated from thenThrows (..., makeThenEscapingAlias)
+    // Generated from thenThrows
     public func thenEscaping(_ body: @escaping (T) throws -> ()) -> Promise<T> { return then(body) }
     
-    // Generated from thenAsync (await body(await task.value) => value, body? => let value = await task.value; await body(value), makeSameType, makeDiscardable)
+    // Generated from thenAsync
     @discardableResult
     public func then(_ body: @escaping (T) async -> ()) -> Guarantee<T> {
         return Guarantee<T>(Task.init {
@@ -428,7 +434,7 @@ extension Guarantee: Thenable {
         })
     }
     
-    // Generated from thenAsyncThrows (try await body(await task.value) => value, body? => let value = await task.value; try await body(value), makeSameType)
+    // Generated from thenAsyncThrows
     public func then(_ body: @escaping (T) async throws -> ()) -> Promise<T> {
         return Promise<T>(Task.init {
             let value = await task.value; try await body(value)
@@ -451,7 +457,7 @@ extension Promise: Thenable {
     
     // generate:then(makeThenEscapingAlias)
     // generate:then(body(try await task.value) => value, body? => let value = try await task.value; body(value), makeSameType)
-    // generate:then(..., makeThenEscapingAlias)
+    // generate:then(..., makeThenEscapingCopyRenameOnly, Promise<T> => Self)
 
     // pattern:thenThrows
     public func then<U>(_ body: @escaping (T) throws -> U) -> Promise<U> {
@@ -489,10 +495,10 @@ extension Promise: Thenable {
     // generate:thenAsyncThrows(try await body(try await task.value) => value, body? => let value = try await task.value; try await body(value), makeSameType)
 
     // GENERATED
-    // Generated from then (makeThenEscapingAlias)
+    // Generated from then
     public func thenEscaping<U>(_ body: @escaping (T) -> U) -> Promise<U> { return then(body) }
     
-    // Generated from then (body(try await task.value) => value, body? => let value = try await task.value; body(value), makeSameType)
+    // Generated from then
     public func then(_ body: @escaping (T) -> ()) -> Promise<T> {
         return Promise<T>(Task.init {
             let value = try await task.value; body(value)
@@ -500,13 +506,18 @@ extension Promise: Thenable {
         })
     }
     
-    // Generated from then (..., makeThenEscapingAlias)
-    public func thenEscaping(_ body: @escaping (T) -> ()) -> Promise<T> { return then(body) }
+    // Generated from then
+    public func thenEscaping(_ body: @escaping (T) -> ()) -> Self {
+        return Self(Task.init {
+            let value = try await task.value; body(value)
+            return value
+        })
+    }
     
-    // Generated from thenThrows (makeThenEscapingAlias)
+    // Generated from thenThrows
     public func thenEscaping<U>(_ body: @escaping (T) throws -> U) -> Promise<U> { return then(body) }
     
-    // Generated from thenThrows (try body(try await task.value) => value, body? => let value = try await task.value; try body(value), makeSameType)
+    // Generated from thenThrows
     public func then(_ body: @escaping (T) throws -> ()) -> Promise<T> {
         return Promise<T>(Task.init {
             let value = try await task.value; try body(value)
@@ -514,10 +525,10 @@ extension Promise: Thenable {
         })
     }
     
-    // Generated from thenThrows (..., makeThenEscapingAlias)
+    // Generated from thenThrows
     public func thenEscaping(_ body: @escaping (T) throws -> ()) -> Promise<T> { return then(body) }
     
-    // Generated from thenAsync (await body(try await task.value) => value, body? => let value = try await task.value; await body(value), makeSameType)
+    // Generated from thenAsync
     public func then(_ body: @escaping (T) async -> ()) -> Promise<T> {
         return Promise<T>(Task.init {
             let value = try await task.value; await body(value)
@@ -525,7 +536,7 @@ extension Promise: Thenable {
         })
     }
     
-    // Generated from thenAsyncThrows (try await body(try await task.value) => value, body? => let value = try await task.value; try await body(value), makeSameType)
+    // Generated from thenAsyncThrows
     public func then(_ body: @escaping (T) async throws -> ()) -> Promise<T> {
         return Promise<T>(Task.init {
             let value = try await task.value; try await body(value)

@@ -2,6 +2,8 @@ import Foundation
 
 import XCTest
 
+let debugRulesInComments = false
+
 enum MappingType: CaseIterable {
     case normal
     case optional
@@ -157,10 +159,19 @@ final class CodeGen: XCTestCase {
                 bodyWithSubs = newBodyWithSubs
             }
             previousRules = rulesCopy
-            let toAppend = """
-                // Generated from \(patternName) (\(substitutionRules))
-            \(bodyWithSubs)
-            """
+            let toAppend: String
+            if debugRulesInComments {
+                toAppend = """
+                    // Generated from \(patternName) (\(substitutionRules))
+                \(bodyWithSubs)
+                """
+            } else {
+                toAppend = """
+                    // Generated from \(patternName)
+                \(bodyWithSubs)
+                """
+            }
+            
             codeGenStrs.append(toAppend)
         }
         
