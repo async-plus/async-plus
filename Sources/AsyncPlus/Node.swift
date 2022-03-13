@@ -129,17 +129,17 @@ public class ChainableResult<T>: BaseResult<T>, Chainable {}
 public class ChainableGuarantee<T>: BaseGuarantee<T>, Chainable {}
 public class ChainablePromise<T>: BasePromise<T>, Chainable {}
 
-public class Value<T>: ChainableValue<T> {}
-public class Result<T>: ChainableResult<T> {}
-public class Guarantee<T>: ChainableGuarantee<T> {}
-public class Promise<T>: ChainablePromise<T> {}
+public final class Value<T>: ChainableValue<T> {}
+public final class Result<T>: ChainableResult<T> {}
+public final class Guarantee<T>: ChainableGuarantee<T> {}
+public final class Promise<T>: ChainablePromise<T> {}
 
-public class PartiallyCaughtResult<T>: ChainableResult<T>, PartiallyCaught {}
-public class CaughtResult<T>: ChainableResult<T>, CompletelyCaught {}
-public class PartiallyCaughtPromise<T>: ChainablePromise<T>, PartiallyCaught {}
-public class CaughtPromise<T>: ChainablePromise<T>, CompletelyCaught {}
+public final class PartiallyCaughtResult<T>: ChainableResult<T>, PartiallyCaught {}
+public final class CaughtResult<T>: ChainableResult<T>, CompletelyCaught {}
+public final class PartiallyCaughtPromise<T>: ChainablePromise<T>, PartiallyCaught {}
+public final class CaughtPromise<T>: ChainablePromise<T>, CompletelyCaught {}
 
-public class FinalizedValue<T>: BaseValue<T> {}
-public class FinalizedResult<T>: BaseResult<T> {}
-public class FinalizedGuarantee<T>: BaseGuarantee<T> {}
-public class FinalizedPromise<T>: BasePromise<T> {}
+public final class FinalizedValue<T>: BaseValue<T> {}
+public final class FinalizedResult<T>: BaseResult<T> {}
+public final class FinalizedGuarantee<T>: BaseGuarantee<T> {}
+public final class FinalizedPromise<T>: BasePromise<T> {}
