@@ -35,7 +35,8 @@ let package = Package(
         ),
         .testTarget(
             name: "CodeGeneration",
-            dependencies: []
+            dependencies: [],
+            exclude: ["README.md"]
         )
     ]
 )
