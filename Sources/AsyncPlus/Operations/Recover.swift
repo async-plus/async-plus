@@ -15,12 +15,6 @@ public protocol Recoverable: Failable, Thenable {
     func recover(_ body: @escaping (Error) async throws -> T) -> Promise<T>
 }
 
-
-
-
-
-
-
 extension Result: Recoverable {
 
     // pattern:recover
@@ -90,12 +84,6 @@ extension Result: Recoverable {
     // END GENERATED
 }
 
-
-
-
-
-
-
 extension Promise: Recoverable {
 
     // These recover functions are async because the current result is already async.
@@ -142,12 +130,6 @@ extension Promise: Recoverable {
     }
 }
 
-
-
-
-
-
-
 private func recoverAsyncBody<T>(_ body: @escaping (Error) async -> T, result: SimpleResult<T>) async -> T {
     switch result {
     case .success(let value):
@@ -157,12 +139,6 @@ private func recoverAsyncBody<T>(_ body: @escaping (Error) async -> T, result: S
     }
 }
 
-
-
-
-
-
-
 private func recoverAsyncThrowsBody<T>(_ body: @escaping (Error) async throws -> T, result: SimpleResult<T>) async throws -> T {
     switch result {
     case .success(let value):
@@ -171,15 +147,3 @@ private func recoverAsyncThrowsBody<T>(_ body: @escaping (Error) async throws ->
         return try await body(error)
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-

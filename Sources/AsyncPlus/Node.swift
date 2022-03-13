@@ -5,11 +5,6 @@ public protocol Node {
     associatedtype T
 }
 
-
-
-
-
-
 public protocol Instant: Node {}
 public protocol Async: Node {}
 
@@ -27,20 +22,10 @@ public protocol IsValue: NonFailable, Instant {
     init(_ value: T)
 }
 
-
-
-
-
-
 public protocol IsResult: Failable, Instant {
     var result: SimpleResult<T> { get }
     init(_ result: SimpleResult<T>)
 }
-
-
-
-
-
 
 extension IsResult {
     public func `throws`() throws -> T {
@@ -62,20 +47,10 @@ extension IsResult {
     }
 }
 
-
-
-
-
-
 public protocol IsGuarantee: NonFailable, Async {
     var task: NonFailableTask<T> { get }
     init(_ task: NonFailableTask<T>)
 }
-
-
-
-
-
 
 extension IsGuarantee {
     public func async() async -> T {
@@ -83,19 +58,10 @@ extension IsGuarantee {
     }
 }
 
-
-
-
-
-
 public protocol IsPromise: Failable, Async {
     var task: FailableTask<T> { get }
     init(_ task: FailableTask<T>)
 }
-
-
-
-
 
 extension IsPromise {
     public func asyncThrows() async throws -> T {
@@ -116,11 +82,6 @@ extension IsPromise {
     }
 }
 
-
-
-
-
-
 public class BaseValue<T>: IsValue {
     
     public let value: T
@@ -128,11 +89,6 @@ public class BaseValue<T>: IsValue {
         self.value = value
     }
 }
-
-
-
-
-
 
 public class BaseResult<T>: IsResult {
 
@@ -142,11 +98,6 @@ public class BaseResult<T>: IsResult {
     }
 }
 
-
-
-
-
-
 public class BaseGuarantee<T>: IsGuarantee {
     
     public let task: NonFailableTask<T>
@@ -155,11 +106,6 @@ public class BaseGuarantee<T>: IsGuarantee {
     }
 }
 
-
-
-
-
-
 public class BasePromise<T>: IsPromise {
 
     public let task: FailableTask<T>
@@ -167,11 +113,6 @@ public class BasePromise<T>: IsPromise {
         self.task = task
     }
 }
-
-
-
-
-
 
 public class ChainableValue<T>: BaseValue<T>, Chainable {}
 public class ChainableResult<T>: BaseResult<T>, Chainable {}
@@ -192,8 +133,3 @@ public class FinalizedValue<T>: BaseValue<T> {}
 public class FinalizedResult<T>: BaseResult<T> {}
 public class FinalizedGuarantee<T>: BaseGuarantee<T> {}
 public class FinalizedPromise<T>: BasePromise<T> {}
-
-
-
-
-
