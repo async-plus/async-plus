@@ -19,6 +19,7 @@ extension Catchable where T == () {
         let _ = self.ensure {
             await mockSleep(seconds: 2)
         }
+        // Uncommenting out below yields an error unfortunately
 //        .catch {
 //            err in
 //            print(err)
@@ -41,3 +42,17 @@ extension Recoverable where T == Int {
         }
     }
 }
+
+func test() {
+    attempt {
+        try await mockSleepThrowing(seconds: 1)
+    }.catch {
+        err in
+        print(err)
+        throw MockError.stackOverflow
+    }.catchEscaping {
+        err in
+        print(err)
+    }
+}
+
