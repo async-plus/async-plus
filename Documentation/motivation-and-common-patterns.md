@@ -49,10 +49,10 @@ Async+ allows async and/or throwing code to remain unnested, modular, and concis
 
 Async+ allows us to easily add catch behavior at any level of a failable operation. For example we could create methods `printingFailure` and `alertingFailure` as follows:
 
-```
+```swift
 import AsycPlus
 
-extension ChainablePromise {
+extension Catchable {
     func printingFailure() -> CaughtPromise<T> {
         return self.catch {
             error in
@@ -67,7 +67,6 @@ extension ChainablePromise {
     }
 }
 ```
-
 
 
 ## Common Patterns

@@ -1,0 +1,3 @@
+[submodule "Scripts/Stencil"]
+	path = Scripts/Stencil
+	url = https://github.com/stencilproject/Stencil.git

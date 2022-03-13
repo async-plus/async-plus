@@ -4,70 +4,94 @@ import Foundation
 
 // Note: No `ensure` function is marked with @discardableResult because `finally` is the preferred way of ending the chain.
 
-extension NodeFailableInstant where Stage == Thenable {
+public protocol Ensurable: Failable, Chainable {
     
-    public func ensure(_ body: () -> ()) -> ChainableResult<T> {
+    associatedtype SelfAsync: IsPromise, Ensurable where T == SelfAsync.T
+    
+    func ensureEscaping(_ body: @escaping () -> ()) -> Self
+
+    func ensure(_ body: @escaping () async -> ()) -> SelfAsync
+}
+
+extension Ensurable where Self: IsResult {
+    // pattern:ensure
+    public func ensure(_ body: () -> ()) -> Self {
         body()
-        return ChainableResult<T>(result)
+        return Self(result)
     }
+    // endpattern
+
+    // generate:ensure(func ensure => func ensureEscaping, makeEscaping)
     
-    public func ensure(_ body: @escaping () async -> ()) -> Promise<T> {
-        return Promise(Task.init {
+    public func ensure(_ body: @escaping () async -> ()) -> SelfAsync {
+        return SelfAsync(Task.init {
             return try await ensureAsyncBody(body, result: result)
         })
     }
-}
 
-extension NodeFailableInstant where Stage: Caught {
-    
-    public func ensure(_ body: () -> ()) -> GenericNodeFailableInstant<T, Stage> {
+    // GENERATED
+    // Generated from ensure
+    public func ensureEscaping(_ body: @escaping () -> ()) -> Self {
         body()
-        return GenericNodeFailableInstant<T, Stage>(result)
+        return Self(result)
     }
-    
-    public func ensure(_ body: @escaping () async -> ()) -> GenericNodeFailableAsync<T, Stage> {
-        return GenericNodeFailableAsync<T, Stage>(Task.init {
-            return try await ensureAsyncBody(body, result: result)
-        })
-    }
+    // END GENERATED
 }
 
-extension NodeFailableAsync where Stage == Thenable {
+extension Result: Ensurable {
+
+    public typealias SelfAsync = Promise<T>
+}
+
+extension PartiallyCaughtResult: Ensurable {
+
+    public typealias SelfAsync = PartiallyCaughtPromise<T>
+}
+
+extension CaughtResult: Ensurable {
+
+    public typealias SelfAsync = CaughtPromise<T>
+}
+
+extension Ensurable where Self: IsPromise {
     
-    public func ensure(_ body: @escaping () -> ()) -> Promise<T> {
-        return Promise<T>(Task.init {
+    public func ensure(_ body: @escaping () -> ()) -> Self {
+        return Self(Task.init {
             let result = await task.result
             body()
             return try result.get()
         })
     }
     
-    public func ensure(_ body: @escaping () async -> ()) -> Promise<T> {
-        return Promise(Task.init {
+    public func ensureEscaping(_ body: @escaping () -> ()) -> Self {
+        return ensure(body)
+    }
+
+    public func ensure(_ body: @escaping () async -> ()) -> SelfAsync {
+        return SelfAsync(Task.init {
             return try await ensureAsyncBody(body, result: await task.result)
         })
     }
 }
 
-extension NodeFailableAsync where Stage: Caught {
-    
-    public func ensure(_ body: @escaping () -> ()) -> GenericNodeFailableAsync<T, Stage> {
-        return GenericNodeFailableAsync<T, Stage>(Task.init {
-            let result = await task.result
-            body()
-            return try result.get()
-        })
-    }
-    
-    public func ensure(_ body: @escaping () async -> ()) -> GenericNodeFailableAsync<T, Stage> {
-        return GenericNodeFailableAsync<T, Stage>(Task.init {
-            return try await ensureAsyncBody(body, result: await task.result)
-        })
-    }
+extension Promise: Ensurable {
+
+    public typealias SelfAsync = Promise<T>
+}
+
+extension PartiallyCaughtPromise: Ensurable {
+
+    public typealias SelfAsync = PartiallyCaughtPromise<T>
+}
+
+extension CaughtPromise: Ensurable {
+
+    public typealias SelfAsync = CaughtPromise<T>
 }
 
 private func ensureAsyncBody<T>(_ body: @escaping () async -> (), result: SimpleResult<T>) async throws -> T {
-    
+
     await body()
     return try result.get()
 }
+

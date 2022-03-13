@@ -3,24 +3,29 @@ import AppKit
 
 public protocol Node {
     associatedtype T
-    associatedtype Fails: FailableFlag
-    associatedtype When: WhenFlag
-    associatedtype Stage: StageFlag
 }
 
-public protocol NodeNonFailable: Node where Fails == NeverFails {}
-public protocol NodeFailable: Node where Fails == Sometimes {}
-public protocol NodeInstant: Node where When == Instant {}
-public protocol NodeAsync: Node where When == Async {}
+public protocol Instant: Node {}
+public protocol Async: Node {}
 
-public protocol NodeNonFailableInstant: NodeNonFailable, NodeInstant {
+public protocol Failable: Node {}
+public protocol NonFailable: Finalizable {}
+
+public protocol Chainable: Node {}
+public protocol CompletelyCaught: Chainable, Finalizable {}
+public protocol PartiallyCaught: Chainable {}
+
+public protocol IsValue: NonFailable, Instant {
     var value: T { get }
+    init(_ value: T)
 }
 
-public protocol NodeFailableInstant: NodeFailable, NodeInstant {
+public protocol IsResult: Failable, Instant {
     var result: SimpleResult<T> { get }
+    init(_ result: SimpleResult<T>)
 }
-extension NodeFailableInstant {
+
+extension IsResult {
     public func `throws`() throws -> T {
         switch result {
         case .success(let value):
@@ -29,7 +34,7 @@ extension NodeFailableInstant {
             throw error
         }
     }
-    
+
     public func optional() -> T? {
         switch result {
         case .success(let value):
@@ -40,23 +45,31 @@ extension NodeFailableInstant {
     }
 }
 
-public protocol NodeNonFailableAsync: NodeNonFailable, NodeAsync {
+public protocol IsGuarantee: NonFailable, Async {
     var task: NonFailableTask<T> { get }
+    init(_ task: NonFailableTask<T>)
 }
-extension NodeNonFailableAsync {
+
+extension IsGuarantee {
     public func async() async -> T {
         return await task.value
     }
 }
 
-public protocol NodeFailableAsync: NodeFailable, NodeAsync {
+public protocol IsPromise: Failable, Async {
     var task: FailableTask<T> { get }
+    init(_ task: FailableTask<T>)
+    
+    func asyncThrows() async throws -> T
+    func asyncOptional() async -> T?
+    func asyncResult() async -> SimpleResult<T>
 }
-extension NodeFailableAsync {
+
+extension IsPromise {
     public func asyncThrows() async throws -> T {
         return try await task.value
     }
-    
+
     public func asyncOptional() async -> T? {
         switch await task.result {
         case .success(let value):
@@ -65,60 +78,68 @@ extension NodeFailableAsync {
             return nil
         }
     }
-    
+
     public func asyncResult() async -> SimpleResult<T> {
         return await task.result
     }
 }
 
-public final class GenericNodeNonFailableInstant<T, Stage: StageFlag>: NodeNonFailableInstant {
-
-    public let value: T
+public class BaseValue<T>: IsValue {
+    public typealias SelfFinalized = FinalizedValue<T>
+    public typealias SelfAsyncFinalized = FinalizedGuarantee<T>
     
-    init(_ value: T) {
+    public let value: T
+    public required init(_ value: T) {
         self.value = value
     }
 }
 
-public final class GenericNodeFailableInstant<T, Stage: StageFlag>: NodeFailableInstant {
+public class BaseResult<T>: IsResult {
+    public typealias SelfFinalized = FinalizedResult<T>
+    public typealias SelfAsyncFinalized = FinalizedPromise<T>
     
     public let result: SimpleResult<T>
-    
-    init(_ result: SimpleResult<T>) {
+    public required init(_ result: SimpleResult<T>) {
         self.result = result
     }
 }
 
-public final class GenericNodeNonFailableAsync<T, Stage: StageFlag>: NodeNonFailableAsync {
+public class BaseGuarantee<T>: IsGuarantee {
+    public typealias SelfFinalized = FinalizedGuarantee<T>
+    public typealias SelfAsyncFinalized = FinalizedGuarantee<T>
     
     public let task: NonFailableTask<T>
-    
-    init(_ task: NonFailableTask<T>) {
+    public required init(_ task: NonFailableTask<T>) {
         self.task = task
     }
 }
 
-public final class GenericNodeFailableAsync<T, Stage: StageFlag>: NodeFailableAsync {
+public class BasePromise<T>: IsPromise {
+    public typealias SelfFinalized = FinalizedPromise<T>
+    public typealias SelfAsyncFinalized = FinalizedPromise<T>
     
     public let task: FailableTask<T>
-
-    init(_ task: FailableTask<T>) {
+    public required init(_ task: FailableTask<T>) {
         self.task = task
     }
 }
 
-public typealias ChainableValue<T> = GenericNodeNonFailableInstant<T, Thenable>
-public typealias ChainableResult<T> = GenericNodeFailableInstant<T, Thenable>
-public typealias Guarantee<T> = GenericNodeNonFailableAsync<T, Thenable>
-public typealias Promise<T> = GenericNodeFailableAsync<T, Thenable>
+public class ChainableValue<T>: BaseValue<T>, Chainable {}
+public class ChainableResult<T>: BaseResult<T>, Chainable {}
+public class ChainableGuarantee<T>: BaseGuarantee<T>, Chainable {}
+public class ChainablePromise<T>: BasePromise<T>, Chainable {}
 
-public typealias PartiallyCaughtResult<T> = GenericNodeFailableInstant<T, PartiallyCaught>
-public typealias CaughtResult<T> = GenericNodeFailableInstant<T, CompletelyCaught>
-public typealias PartiallyCaughtPromise<T> = GenericNodeFailableAsync<T, PartiallyCaught>
-public typealias CaughtPromise<T> = GenericNodeFailableAsync<T, CompletelyCaught>
+public class Value<T>: ChainableValue<T> {}
+public class Result<T>: ChainableResult<T> {}
+public class Guarantee<T>: ChainableGuarantee<T> {}
+public class Promise<T>: ChainablePromise<T> {}
 
-public typealias FinalizedValue<T> = GenericNodeNonFailableInstant<T, Finalized>
-public typealias FinalizedResult<T> = GenericNodeFailableInstant<T, Finalized>
-public typealias FinalizedGuarantee<T> = GenericNodeNonFailableAsync<T, Finalized>
-public typealias FinalizedPromise<T> = GenericNodeFailableAsync<T, Finalized>
+public class PartiallyCaughtResult<T>: ChainableResult<T>, PartiallyCaught {}
+public class CaughtResult<T>: ChainableResult<T>, CompletelyCaught {}
+public class PartiallyCaughtPromise<T>: ChainablePromise<T>, PartiallyCaught {}
+public class CaughtPromise<T>: ChainablePromise<T>, CompletelyCaught {}
 
+public class FinalizedValue<T>: BaseValue<T> {}
+public class FinalizedResult<T>: BaseResult<T> {}
+public class FinalizedGuarantee<T>: BaseGuarantee<T> {}
+public class FinalizedPromise<T>: BasePromise<T> {}
