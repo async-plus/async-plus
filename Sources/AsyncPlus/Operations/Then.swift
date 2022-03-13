@@ -7,7 +7,7 @@ import Foundation
 public protocol Thenable: Chainable {
 
     associatedtype SelfFailable: Failable, Chainable where SelfFailable.T == T
-//    associatedtype SelfAsync: Async, Chainable where SelfAsync.T == T
+    associatedtype SelfAsync: Async, Chainable where SelfAsync.T == T
     
     
 //    func thenEscaping<U, Result: Thenable>(_ body: @escaping (T) -> U) -> Result where Result.T == U
@@ -19,8 +19,8 @@ public protocol Thenable: Chainable {
     
     func thenEscaping(_ body: @escaping (T) throws -> ()) -> SelfFailable
 
-//    @discardableResult
-//    func then(_ body: @escaping (T) async -> ()) -> SelfAsync
+    @discardableResult
+    func then(_ body: @escaping (T) async -> ()) -> SelfAsync
 
     func then<U>(_ body: @escaping (T) async throws -> U) -> Promise<U>
 
@@ -35,6 +35,7 @@ public protocol Thenable: Chainable {
 extension Value: Thenable {
 
     public typealias SelfFailable = Result<T>
+    public typealias SelfAsync = Guarantee<T>
     
     // pattern:then
     // discard?
@@ -160,6 +161,7 @@ extension Value: Thenable {
 extension Result: Thenable {
 
     public typealias SelfFailable = Result<T>
+    // public typealias SelfAsync = Promise<T>
     
     // pattern:then
     public func then<U>(_ body: (T) -> U) -> Result<U> {
@@ -343,6 +345,7 @@ extension Result: Thenable {
 extension Guarantee: Thenable {
 
     public typealias SelfFailable = Promise<T>
+    public typealias SelfAsync = Guarantee<T>
     
     // pattern:then
     // discard?
@@ -453,6 +456,7 @@ extension Guarantee: Thenable {
 extension Promise: Thenable {
 
     public typealias SelfFailable = Promise<T>
+    // public typealias SelfAsync = Promise<T>
     
     // pattern:then
     public func then<U>(_ body: @escaping (T) -> U) -> Promise<U> {
