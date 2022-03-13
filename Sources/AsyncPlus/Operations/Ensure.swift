@@ -13,6 +13,7 @@ public protocol Ensurable: Failable, Chainable {
     func ensure(_ body: @escaping () async -> ()) -> SelfAsync
 }
 
+
 extension Ensurable where Self: IsResult {
     // pattern:ensure
     public func ensure(_ body: () -> ()) -> Self {
@@ -21,7 +22,7 @@ extension Ensurable where Self: IsResult {
     }
     // endpattern
 
-    // generate:ensure(func ensure => func ensureEscaping, body: => body: @escaping)
+    // generate:ensure(func ensure => func ensureEscaping, makeEscaping)
     
     public func ensure(_ body: @escaping () async -> ()) -> SelfAsync {
         return SelfAsync(Task.init {
@@ -34,24 +35,45 @@ extension Ensurable where Self: IsResult {
         body()
         return Self(result)
     }
-    
     // END GENERATED
 }
+
 
 extension Result: Ensurable {
 
     public typealias SelfAsync = Promise<T>
 }
 
+
+
+
+
+
+
+
 extension PartiallyCaughtResult: Ensurable {
 
     public typealias SelfAsync = PartiallyCaughtPromise<T>
 }
 
+
+
+
+
+
+
+
 extension CaughtResult: Ensurable {
 
     public typealias SelfAsync = CaughtPromise<T>
 }
+
+
+
+
+
+
+
 
 extension Ensurable where Self: IsPromise {
     
@@ -74,15 +96,36 @@ extension Ensurable where Self: IsPromise {
     }
 }
 
+
+
+
+
+
+
+
 extension Promise: Ensurable {
 
     public typealias SelfAsync = Promise<T>
 }
 
+
+
+
+
+
+
+
 extension PartiallyCaughtPromise: Ensurable {
 
     public typealias SelfAsync = PartiallyCaughtPromise<T>
 }
+
+
+
+
+
+
+
 
 // TODO: Codegen
 extension CaughtPromise: Ensurable {
@@ -90,9 +133,30 @@ extension CaughtPromise: Ensurable {
     public typealias SelfAsync = CaughtPromise<T>
 }
 
+
+
+
+
+
+
+
 private func ensureAsyncBody<T>(_ body: @escaping () async -> (), result: SimpleResult<T>) async throws -> T {
 
     await body()
     return try result.get()
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

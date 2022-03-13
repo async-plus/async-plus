@@ -18,6 +18,11 @@ public protocol Catchable: Failable, Chainable where T == () {
     func `catch`(_ body: @escaping (Error) async throws -> ()) -> PartiallyCaughtPromise<T>
 }
 
+
+
+
+
+
 extension ChainableResult: Catchable where T == () {
     
     public typealias SelfCaught = CaughtResult<T>
@@ -48,7 +53,7 @@ extension ChainableResult: Catchable where T == () {
     }
     // endpattern
     
-    // generate:catchThrows(func `catch` => func catchEscaping, body: => body: @escaping)
+    // generate:catchThrows(func `catch` => func catchEscaping, makeEscaping)
 
     @discardableResult
     public func `catch`(_ body: @escaping (Error) async /*safe*/ -> ()) -> CaughtPromise<T> {
@@ -82,9 +87,13 @@ extension ChainableResult: Catchable where T == () {
             return PartiallyCaughtResult(.failure(error))
         }
     }
-    
     // END GENERATED
 }
+
+
+
+
+
 
 extension ChainablePromise: Catchable where T == () {
 
@@ -139,6 +148,11 @@ extension ChainablePromise: Catchable where T == () {
     }
 }
 
+
+
+
+
+
 private func catchAsyncBody<T>(_ body: @escaping (Error) async -> (), result: SimpleResult<T>) async throws -> T {
     switch result {
     case .success(let value):
@@ -149,6 +163,11 @@ private func catchAsyncBody<T>(_ body: @escaping (Error) async -> (), result: Si
     }
 }
 
+
+
+
+
+
 private func catchAsyncThrowsBody<T>(_ body: @escaping (Error) async throws -> (), result: SimpleResult<T>) async throws -> T {
     switch result {
     case .success(let value):
@@ -158,4 +177,14 @@ private func catchAsyncThrowsBody<T>(_ body: @escaping (Error) async throws -> (
         throw error
     }
 }
+
+
+
+
+
+
+
+
+
+
 

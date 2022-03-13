@@ -12,6 +12,11 @@ public protocol Finalizable: Node { // where Self: CompletelyCaught OR Self: Non
     func finally(_ body: @escaping () async -> ()) -> SelfAsyncFinalized
 }
 
+
+
+
+
+
 extension ChainableValue: Finalizable {
     
     // pattern:finally
@@ -38,9 +43,13 @@ extension ChainableValue: Finalizable {
         body()
         return FinalizedValue<T>(value)
     }
-    
     // END GENERATED
 }
+
+
+
+
+
 
 extension CaughtResult: Finalizable {
     
@@ -68,9 +77,13 @@ extension CaughtResult: Finalizable {
         body()
         return FinalizedResult(result)
     }
-    
     // END GENERATED
 }
+
+
+
+
+
 
 extension ChainableGuarantee: Finalizable {
     
@@ -98,6 +111,11 @@ extension ChainableGuarantee: Finalizable {
     }
 }
 
+
+
+
+
+
 extension CaughtPromise: Finalizable {
     
     @discardableResult
@@ -123,3 +141,13 @@ extension CaughtPromise: Finalizable {
         })
     }
 }
+
+
+
+
+
+
+
+
+
+

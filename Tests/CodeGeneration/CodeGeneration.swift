@@ -87,7 +87,7 @@ final class CodeGen: XCTestCase {
         // Output with codegen
         let replaceWith = """
         // GENERATED
-        \(codeGenStrs.joined(separator: "\n"))    // END GENERATED
+        \(codeGenStrs.joined(separator: "\n"))// END GENERATED
         """
         return sourceStr.replacingRegex(#"\/\/ GENERATED\n((?!\/\/ END GENERATED)(.|\n))*\/\/ END GENERATED"#, with: replaceWith)
     }
@@ -124,7 +124,7 @@ final class CodeGen: XCTestCase {
             // Read file
             let fileContents = try! String(contentsOf: fileURL, encoding: .utf8)
             
-            for captureGroups in fileContents.regexFind(#"\/\/ generate:([\w\d]+)\((.*)\)"#) {
+            for captureGroups in fileContents.regexFind(#"\/\/ ruleset:([\w\d]+)\((.*)\)"#) {
                 
                 let ruleSetName = captureGroups[1]
                 let substitutionRules = captureGroups[2]
@@ -166,7 +166,7 @@ final class CodeGen: XCTestCase {
             transformedTLDs.append(runCodeGen(runningTLD, ruleSets))
             
             // Write file (dropLast \n)
-            try! transformedTLDs.joined(separator: "\n").write(to: fileURL, atomically: false, encoding: .utf8)
+            try! transformedTLDs.joined(separator: "").write(to: fileURL, atomically: false, encoding: .utf8)
         }
         
         print("DONE")

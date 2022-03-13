@@ -4,6 +4,11 @@ public struct CompactMapError: Error {
     public init() {}
 }
 
+
+
+
+
+
 extension Optional {
     
     public func unwrapOrThrow(_ error: Error = CompactMapError()) throws -> Wrapped {
@@ -13,3 +18,13 @@ extension Optional {
         return result
     }
 }
+
+
+
+
+
+
+
+
+
+

@@ -27,6 +27,12 @@ public protocol Thenable: Chainable {
     func then(_ body: @escaping (T) async throws -> ()) -> Promise<T>
 }
 
+
+
+
+
+
+
 extension Value: Thenable {
 
     // pattern:then
@@ -61,8 +67,6 @@ extension Value: Thenable {
         })
     }
     // endPattern
-
-    // generate:thenAsync()
     
 //    @discardableResult
 //    public func then(_ body: @escaping (T) async -> ()) -> Guarantee<T> {
@@ -100,9 +104,14 @@ extension Value: Thenable {
             return Result(.failure(error))
         }
     }
-    
     // END GENERATED
 }
+
+
+
+
+
+
 
 extension Result: Thenable {
 
@@ -200,6 +209,12 @@ extension Result: Thenable {
     }
 }
 
+
+
+
+
+
+
 extension Guarantee: Thenable {
 
     public func then<U>(_ body: @escaping (T) -> U) -> Guarantee<U> {
@@ -261,6 +276,12 @@ extension Guarantee: Thenable {
     }
 }
 
+
+
+
+
+
+
 extension Promise: Thenable {
 
     public func then<U>(_ body: @escaping (T) -> U) -> Promise<U> {
@@ -319,3 +340,15 @@ extension Promise: Thenable {
         })
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
