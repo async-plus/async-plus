@@ -2,6 +2,44 @@ import Foundation
 
 import XCTest
 
+enum MappingType: CaseIterable {
+    case normal
+    case optional
+    case regex
+    case optionalRegex
+    
+    var symbol: String {
+        switch self {
+        case .normal:
+            return "=>"
+        case .optional:
+            return "?=>"
+        case .regex:
+            return "R=>"
+        case .optionalRegex:
+            return "R?=>"
+        }
+    }
+    
+    var isOptional: Bool {
+        switch self {
+        case .optional, .optionalRegex:
+            return true
+        case .normal, .regex:
+            return false
+        }
+    }
+    
+    var isRegex: Bool {
+        switch self {
+        case .regex, .optionalRegex:
+            return true
+        case .normal, .optional:
+            return false
+        }
+    }
+}
+
 extension String {
     
     var fullRange: NSRange {
@@ -72,8 +110,19 @@ final class CodeGen: XCTestCase {
             while !rules.isEmpty {
                 let rule = rules.removeFirst()
                 
-                let parts: [String] = rule.components(separatedBy: " => ")
-                if parts.count == 1 {
+                var parts: [String] = []
+                var matchedMappingType: MappingType? = nil
+                for mappingType: MappingType in MappingType.allCases {
+                    parts = rule.components(separatedBy: " \(mappingType.symbol) ")
+                    if parts.count == 2 {
+                        matchedMappingType = mappingType
+                        break
+                    } else if parts.count > 2 {
+                        fatalError("Found consecutive '=>' or similar mappings: need ', ' to separate them.")
+                    }
+                }
+                
+                guard let matchedMappingType = matchedMappingType else {
                     // Expand this as a ruleset
                     if rule == "..." {
                         guard let previousRules = previousRules else {
@@ -87,18 +136,27 @@ final class CodeGen: XCTestCase {
                     } else {
                         fatalError("Could not find referenced ruleset: \(rule)")
                     }
+
                     continue
-                } else if parts.count > 2 {
-                    fatalError("Found consecutive ' => ': need commas to separate them.")
                 }
                 let lhs = parts[0]
                 let rhs = parts[1]
-                bodyWithSubs = bodyWithSubs.replacingOccurrences(of: "// \(lhs)\n", with: rhs + "\n")
-                bodyWithSubs = bodyWithSubs.replacingOccurrences(of: "/* \(lhs) */", with: rhs)
-                bodyWithSubs = bodyWithSubs.replacingOccurrences(of: lhs, with: rhs)
+                
+                var newBodyWithSubs = bodyWithSubs
+                if !matchedMappingType.isRegex {
+                    newBodyWithSubs = newBodyWithSubs.replacingOccurrences(of: "// \(lhs)\n", with: rhs + "\n")
+                    newBodyWithSubs = newBodyWithSubs.replacingOccurrences(of: "/* \(lhs) */", with: rhs)
+                    newBodyWithSubs = newBodyWithSubs.replacingOccurrences(of: lhs, with: rhs)
+                } else {
+                    newBodyWithSubs = newBodyWithSubs.replacingRegex(lhs, with: rhs)
+                }
+                
+                if !matchedMappingType.isOptional && newBodyWithSubs == bodyWithSubs {
+                    fatalError("Rule \(rule) did not match any part of the input pattern. Mark the rule as optional with ?=> or R?=> if this is expected.")
+                }
+                bodyWithSubs = newBodyWithSubs
             }
             previousRules = rulesCopy
-            
             codeGenStrs.append(bodyWithSubs)
         }
         
