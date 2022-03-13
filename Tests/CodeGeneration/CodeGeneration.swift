@@ -166,7 +166,7 @@ final class CodeGen: XCTestCase {
             transformedTLDs.append(runCodeGen(runningTLD, ruleSets))
             
             // Write file (dropLast \n)
-            try! transformedTLDs.joined(separator: "").write(to: fileURL, atomically: false, encoding: .utf8)
+            try! transformedTLDs.joined(separator: "").dropLast().write(to: fileURL, atomically: false, encoding: .utf8)
         }
         
         print("DONE")
