@@ -6,8 +6,8 @@ import Foundation
 
 public protocol Thenable: Chainable {
 
-    associatedtype SelfFailable: Failable, Chainable where SelfFailable.T == T
-    associatedtype SelfAsync: Async, Chainable where SelfAsync.T == T
+    associatedtype SelfFailable: Failable, Thenable where SelfFailable.T == T
+    associatedtype SelfAsync: Async, Thenable where SelfAsync.T == T
     
     
 //    func thenEscaping<U, Result: Thenable>(_ body: @escaping (T) -> U) -> Result where Result.T == U

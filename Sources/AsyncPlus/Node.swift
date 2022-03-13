@@ -13,9 +13,9 @@ public protocol NonFailable: Node {}
 
 public protocol Chainable: Node {}
 // public protocol Thenable: Chainable {}
-public protocol Caught: Chainable {}
-public protocol CompletelyCaught: Caught {}
-public protocol PartiallyCaught: Caught {}
+// public protocol Caught: Chainable {}
+public protocol CompletelyCaught: Chainable {}
+public protocol PartiallyCaught: Chainable {}
 
 public protocol IsValue: NonFailable, Instant {
     var value: T { get }
