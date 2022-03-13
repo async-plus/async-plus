@@ -7,20 +7,24 @@ extension Catchable {
         self.catchEscaping {
             err in
             print(err)
+        }.finallyEscaping {
+            print("Done")
         }
     }
 }
 
-extension Catchable {
+extension Catchable where T == () {
     func delayThenCatch() {
-        self.ensure {
+        // BUG: I don't know why we are not allowed to do this:
+        let _ = self.ensure {
             await mockSleep(seconds: 2)
-        }.catch {
-            err in
-            print(err)
-        }.finally {
-            print("DONE")
         }
+//        .catch {
+//            err in
+//            print(err)
+//        }.finally {
+//            print("DONE")
+//        }
     }
 }
 
@@ -29,7 +33,11 @@ extension Recoverable where T == Int {
         self.recoverEscaping {
             err -> Int in
             print(err)
-            return 42
+            throw MockError.notImplemented
+            //return 42
+        }.then {
+            _ in
+            await mockSleep(seconds: 2)
         }
     }
 }

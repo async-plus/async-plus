@@ -9,12 +9,10 @@ public protocol Instant: Node {}
 public protocol Async: Node {}
 
 public protocol Failable: Node {}
-public protocol NonFailable: Node {}
+public protocol NonFailable: Finalizable {}
 
 public protocol Chainable: Node {}
-// public protocol Thenable: Chainable {}
-// public protocol Caught: Chainable {}
-public protocol CompletelyCaught: Chainable {}
+public protocol CompletelyCaught: Chainable, Finalizable {}
 public protocol PartiallyCaught: Chainable {}
 
 public protocol IsValue: NonFailable, Instant {
@@ -61,6 +59,10 @@ extension IsGuarantee {
 public protocol IsPromise: Failable, Async {
     var task: FailableTask<T> { get }
     init(_ task: FailableTask<T>)
+    
+    func asyncThrows() async throws -> T
+    func asyncOptional() async -> T?
+    func asyncResult() async -> SimpleResult<T>
 }
 
 extension IsPromise {
@@ -83,6 +85,8 @@ extension IsPromise {
 }
 
 public class BaseValue<T>: IsValue {
+    public typealias SelfFinalized = FinalizedValue<T>
+    public typealias SelfAsyncFinalized = FinalizedGuarantee<T>
     
     public let value: T
     public required init(_ value: T) {
@@ -91,7 +95,9 @@ public class BaseValue<T>: IsValue {
 }
 
 public class BaseResult<T>: IsResult {
-
+    public typealias SelfFinalized = FinalizedResult<T>
+    public typealias SelfAsyncFinalized = FinalizedPromise<T>
+    
     public let result: SimpleResult<T>
     public required init(_ result: SimpleResult<T>) {
         self.result = result
@@ -99,6 +105,8 @@ public class BaseResult<T>: IsResult {
 }
 
 public class BaseGuarantee<T>: IsGuarantee {
+    public typealias SelfFinalized = FinalizedGuarantee<T>
+    public typealias SelfAsyncFinalized = FinalizedGuarantee<T>
     
     public let task: NonFailableTask<T>
     public required init(_ task: NonFailableTask<T>) {
@@ -107,7 +115,9 @@ public class BaseGuarantee<T>: IsGuarantee {
 }
 
 public class BasePromise<T>: IsPromise {
-
+    public typealias SelfFinalized = FinalizedPromise<T>
+    public typealias SelfAsyncFinalized = FinalizedPromise<T>
+    
     public let task: FailableTask<T>
     public required init(_ task: FailableTask<T>) {
         self.task = task

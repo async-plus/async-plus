@@ -12,7 +12,7 @@ public protocol Finalizable: Node { // where Self: CompletelyCaught OR Self: Non
     func finally(_ body: @escaping () async -> ()) -> SelfAsyncFinalized
 }
 
-extension ChainableValue: Finalizable {
+extension Finalizable where Self: IsValue {
     
     // pattern:finally
     @discardableResult
@@ -42,7 +42,7 @@ extension ChainableValue: Finalizable {
     // END GENERATED
 }
 
-extension CaughtResult: Finalizable {
+extension Finalizable where Self: IsResult, Self: CompletelyCaught {
     
     // pattern:finally
     @discardableResult
@@ -72,7 +72,7 @@ extension CaughtResult: Finalizable {
     // END GENERATED
 }
 
-extension ChainableGuarantee: Finalizable {
+extension Finalizable where Self: IsGuarantee {
     
     @discardableResult
     public func finally(_ body: @escaping () -> ()) -> FinalizedGuarantee<T> {
@@ -98,7 +98,7 @@ extension ChainableGuarantee: Finalizable {
     }
 }
 
-extension CaughtPromise: Finalizable {
+extension Finalizable where Self: IsPromise {
     
     @discardableResult
     public func finally(_ body: @escaping () -> ()) -> FinalizedPromise<T> {

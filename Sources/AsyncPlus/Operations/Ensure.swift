@@ -6,7 +6,7 @@ import Foundation
 
 public protocol Ensurable: Failable, Chainable {
     
-    associatedtype SelfAsync: IsPromise, Ensurable where SelfAsync.T == T
+    associatedtype SelfAsync: IsPromise, Ensurable where T == SelfAsync.T
     
     func ensureEscaping(_ body: @escaping () -> ()) -> Self
 
