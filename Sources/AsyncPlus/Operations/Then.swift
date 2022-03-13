@@ -28,7 +28,8 @@ public protocol Thenable: Chainable {
 }
 
 // ruleset:makeDiscardable(discard? => @discardableResult)
-// ruleset:makeSameType(body(value) => value, body? => body(value), -> U => -> (), then<U> => then, U => T)
+// ruleset:makeSameType(-> U => -> (), then<U> => then, U => T)
+// ruleset:makeThenEscaping(func then => func thenEscaping, makeEscaping)
 
 extension Value: Thenable {
 
@@ -40,7 +41,9 @@ extension Value: Thenable {
     }
     // endpattern
     
-    // generate:then(makeSameType, makeDiscardable)
+    // generate:then(makeThenEscaping)
+    // generate:then(body(value) => value, body? => body(value), makeSameType, makeDiscardable)
+    // generate:then(body(value) => value, body? => body(value), makeSameType, makeDiscardable, makeThenEscaping)
 
     // pattern:thenThrows
     public func then<U>(_ body: (T) throws -> U) -> Result<U> {
@@ -53,42 +56,46 @@ extension Value: Thenable {
     }
     // endpattern
     
-    // generate:thenThrows(try body(value) => value, body? => try body(value), -> U => -> (), then<U> => then, U => T)
+    // generate:thenThrows(try body(value) => value, body? => try body(value), makeSameType)
 
     // pattern:thenAsync
     // discard?
     public func then<U>(_ body: @escaping (T) async -> U) -> Guarantee<U> {
-        // body?
         return Guarantee<U>(Task.init {
+            // body?
             return await body(value)
         })
     }
-    // endPattern
+    // endpattern
     
-//    @discardableResult
-//    public func then(_ body: @escaping (T) async -> ()) -> Guarantee<T> {
-//        return Guarantee<T>(Task.init {
-//            await body(value)
-//            return value
-//        })
-//    }
+    // generate:thenAsync(await body(value) => value, body? => await body(value), makeSameType, makeDiscardable)
 
+    // pattern:thenAsyncThrows
     public func then<U>(_ body: @escaping (T) async throws -> U) -> Promise<U> {
         return Promise<U>(Task.init {
+            // body?
             return try await body(value)
         })
     }
+    // endpattern
 
-    public func then(_ body: @escaping (T) async throws -> ()) -> Promise<T> {
-        return Promise<T>(Task.init {
-            try await body(value)
-            return value
-        })
-    }
+    // generate:thenAsyncThrows(try await body(value) => value, body? => try await body(value), makeSameType, makeDiscardable)
 
     // GENERATED
+    // discard?
+    public func thenEscaping<U>(_ body: @escaping (T) -> U) -> Value<U> {
+        // body?
+        return Value<U>(body(value))
+    }
+    
     @discardableResult
     public func then(_ body: (T) -> ()) -> Value<T> {
+        body(value)
+        return Value<T>(value)
+    }
+    
+    @discardableResult
+    public func thenEscaping(_ body: @escaping (T) -> ()) -> Value<T> {
         body(value)
         return Value<T>(value)
     }
@@ -100,6 +107,21 @@ extension Value: Thenable {
         } catch {
             return Result(.failure(error))
         }
+    }
+    
+    @discardableResult
+    public func then(_ body: @escaping (T) async -> ()) -> Guarantee<T> {
+        return Guarantee<T>(Task.init {
+            await body(value)
+            return value
+        })
+    }
+    
+    public func then(_ body: @escaping (T) async throws -> ()) -> Promise<T> {
+        return Promise<T>(Task.init {
+            try await body(value)
+            return value
+        })
     }
     // END GENERATED
 }

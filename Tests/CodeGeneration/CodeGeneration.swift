@@ -63,21 +63,27 @@ final class CodeGen: XCTestCase {
             }
             
             // Commas within substitution rules need to be escaped with \,
-            let rulesSplit = substitutionRules.splitOnUnescapedComma()
+            var rulesSplit = substitutionRules.splitOnUnescapedComma()
             
             var bodyWithSubs = patternBody
-            var rulesExpandedWithRuleSets: [String] = []
-            for keyOrRule: String in rulesSplit {
-                if let sub: String = ruleSets[keyOrRule] {
-                    rulesExpandedWithRuleSets += sub.splitOnUnescapedComma()
-                } else {
-                    rulesExpandedWithRuleSets.append(keyOrRule)
-                }
-            }
-            
-            for rule in rulesExpandedWithRuleSets {
+
+            while !rulesSplit.isEmpty {
+                let rule = rulesSplit.removeFirst()
                 
-                let parts = rule.components(separatedBy: " => ")
+                let parts: [String] = rule.components(separatedBy: " => ")
+                if parts.count == 1 {
+                    // Expand this as a ruleset
+                    if let sub: String = ruleSets[rule] {
+                        rulesSplit = sub.splitOnUnescapedComma() + rulesSplit
+                    } else if rule.contains("->") {
+                        fatalError("Use ' => ' not ' -> ' to make rules.")
+                    } else {
+                        fatalError("Could not find referenced ruleset: \(rule)")
+                    }
+                    continue
+                } else if parts.count > 2 {
+                    fatalError("Found consecutive ' => ': need commas to separate them.")
+                }
                 let lhs = parts[0]
                 let rhs = parts[1]
                 bodyWithSubs = bodyWithSubs.replacingOccurrences(of: "// \(lhs)\n", with: rhs + "\n")
@@ -148,6 +154,15 @@ final class CodeGen: XCTestCase {
             
             // Read file
             let fileContents = try! String(contentsOf: fileURL, encoding: .utf8)
+            
+            // Safety checks
+            if fileContents.contains("// endPattern") {
+                fatalError("The proper directive is '// endpattern' (no capitalization)")
+            }
+            if fileContents.contains("//pattern") || fileContents.contains("//ruleset") || fileContents.contains("//generate") {
+                fatalError("Need space before code gen directive.")
+            }
+            
             
             // Scan top level declaration. We rely on this repo having proper indentation levels for this to work.
             // TLD is a term used loosely
