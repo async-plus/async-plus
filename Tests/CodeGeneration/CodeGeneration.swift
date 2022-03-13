@@ -65,8 +65,6 @@ func forEverySourceFile(_ closure: (URL) -> ()) {
     
     let repoPath = testsPath.deletingLastPathComponent()
     let sourcesPath = repoPath.appendingPathComponent("Sources")
-    print(repoPath)
-    print(sourcesPath)
     
     let resourceKeys : [URLResourceKey] = [.creationDateKey, .isDirectoryKey]
     let enumerator = FileManager.default.enumerator(at: sourcesPath, includingPropertiesForKeys: resourceKeys, options: [.skipsHiddenFiles, .skipsPackageDescendants])!
