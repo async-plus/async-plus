@@ -1,15 +1,14 @@
 import Foundation
 
-
-public func attempt<T>(_ body: () -> T) -> ChainableValue<T> {
-    return ChainableValue(body())
+public func attempt<T>(_ body: () -> T) -> Value<T> {
+    return Value(body())
 }
 
-public func attempt<T>(_ body: () throws -> T) -> ChainableResult<T> {
+public func attempt<T>(_ body: () throws -> T) -> Result<T> {
     do {
-        return ChainableResult(.success(try body()))
+        return Result(.success(try body()))
     } catch {
-        return ChainableResult(.failure(error))
+        return Result(.failure(error))
     }
 }
 

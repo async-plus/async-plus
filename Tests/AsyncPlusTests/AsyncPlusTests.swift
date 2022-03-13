@@ -6,18 +6,25 @@ final class AsyncPlusTests: XCTestCase {
     func testChain1() throws {
         
         let expectation1 = expectation(description: "")
+        let switchVar = true
         
         attempt {
             () -> Int in
             print("Start counting")
             try await mockSleepThrowing(seconds: 1)
-            throw MockError.stackOverflow
+            if switchVar {
+                throw MockError.stackOverflow
+            }
+            return 4
         }.recover {
             err in
             await mockSleep(seconds: 1)
             print("We recovered")
             expectation1.fulfill()
             return 2
+        }.then {
+            _ in
+            // We need this to get rid of the integer value
         }.catch {
             err in
             try! await mockSleepThrowing(seconds: 1)
@@ -56,6 +63,9 @@ final class AsyncPlusTests: XCTestCase {
             try! await mockSleepThrowing(seconds: 1)
             start2 = DispatchTime.now()
             throw MockError.noInternet
+        }.then {
+            v in
+            print(v)
         }.catch {
             err in
             measure(since: start2)

@@ -58,7 +58,7 @@ Always runs the provided body in place with respect to the other chained operati
 
 **catch**
 * Runs the provided body closure in the event that the chain fails. The error will be passed to the body closure, which may be async and/or throwing.
-* If the body closure is throwing, a PartiallyCaughtPromise or a PartiallyCaughtResult will be returned, implying that a further `catch` call is required or the value of the chain must be used in some other way such as through a call to `asyncThrows()`.
+* If the body closure is throwing, a `PartiallyCaughtPromise` or a `PartiallyCaughtResult` will be returned, implying that a further `catch` call is required or the value of the chain must be used in some other way such as through a call to `asyncThrows()`.
 * If the body closure does not throw, the result is discardable and returns a `CaughtPromise` or `CaughtResult` type.
 
 ```swift

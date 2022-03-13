@@ -49,26 +49,26 @@ Async+ allows async and/or throwing code to remain unnested, modular, and concis
 
 Async+ allows us to easily add catch behavior at any level of a failable operation. For example we could create methods `printingFailure` and `alertingFailure` as follows:
 
-```
+```swift
 import AsycPlus
 
-extension ChainablePromise {
+extension Catchable {
     func printingFailure() -> CaughtPromise<T> {
-        return self.catch {
+        return self.catchEscaping {
             error in
             print(error.localizedDescription)
         }
     }
     
     func alertingFailure() -> CaughtPromise<T> {
-        return self.catch {
+        return self.catchEscaping {
             alert(error.localizedDescription)
         }
     }
 }
 ```
 
-
+Note that in the protocol context it is more efficient to use `catchEscaping` rather than `catch` when passing a non-async closure, although `catch` would work too. For most cases besides this one it is more effecient to stick with the normal `catch` operation (`catchEscaping` and all other variants of operators with suffix `Escaping` exist because Swift does not allow overloads of the same method with varying @escaping status of a closure).
 
 ## Common Patterns
 

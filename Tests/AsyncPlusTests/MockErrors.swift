@@ -5,4 +5,7 @@ enum MockError: Error {
     case pandemic
     case noInternet
     case notImplemented
+    case supplyChainIssues
 }
+
+

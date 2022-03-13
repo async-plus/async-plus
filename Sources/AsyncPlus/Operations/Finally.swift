@@ -1,12 +1,28 @@
 import Foundation
 
-extension NodeNonFailableInstant {
+public protocol Finalizable: Node { // where Self: CompletelyCaught OR Self: NonFailable
     
+    associatedtype SelfFinalized: Node where SelfFinalized.T == T
+    associatedtype SelfAsyncFinalized: Async where SelfAsyncFinalized.T == T
+    
+    @discardableResult
+    func finallyEscaping(_ body: @escaping () -> ()) -> SelfFinalized
+    
+    @discardableResult
+    func finally(_ body: @escaping () async -> ()) -> SelfAsyncFinalized
+}
+
+extension Finalizable where Self: IsValue {
+    
+    // pattern:finally
     @discardableResult
     public func finally(_ body: () -> ()) -> FinalizedValue<T> {
         body()
         return FinalizedValue<T>(value)
     }
+    // endpattern
+    
+    // generate:finally(func finally => func finallyEscaping, body: => body: @escaping)
     
     @discardableResult
     public func finally(_ body: @escaping () async -> ()) -> FinalizedGuarantee<T> {
@@ -15,15 +31,28 @@ extension NodeNonFailableInstant {
             return value
         })
     }
+
+    // GENERATED
+    // Generated from finally
+    @discardableResult
+    public func finallyEscaping(_ body: @escaping () -> ()) -> FinalizedValue<T> {
+        body()
+        return FinalizedValue<T>(value)
+    }
+    // END GENERATED
 }
 
-extension NodeFailableInstant where Stage == CompletelyCaught {
+extension Finalizable where Self: IsResult, Self: CompletelyCaught {
     
+    // pattern:finally
     @discardableResult
     public func finally(_ body: () -> ()) -> FinalizedResult<T> {
         body()
         return FinalizedResult(result)
     }
+    // endpattern
+    
+    // generate:finally(func finally => func finallyEscaping, body: => body: @escaping)
     
     @discardableResult
     public func finally(_ body: @escaping () async -> ()) -> FinalizedPromise<T> {
@@ -32,9 +61,18 @@ extension NodeFailableInstant where Stage == CompletelyCaught {
             return try result.get()
         })
     }
+
+    // GENERATED
+    // Generated from finally
+    @discardableResult
+    public func finallyEscaping(_ body: @escaping () -> ()) -> FinalizedResult<T> {
+        body()
+        return FinalizedResult(result)
+    }
+    // END GENERATED
 }
 
-extension NodeNonFailableAsync {
+extension Finalizable where Self: IsGuarantee {
     
     @discardableResult
     public func finally(_ body: @escaping () -> ()) -> FinalizedGuarantee<T> {
@@ -46,6 +84,11 @@ extension NodeNonFailableAsync {
     }
     
     @discardableResult
+    public func finallyEscaping(_ body: @escaping () -> ()) -> FinalizedGuarantee<T> {
+        return finally(body)
+    }
+    
+    @discardableResult
     public func finally(_ body: @escaping () async -> ()) -> FinalizedGuarantee<T> {
         return FinalizedGuarantee(Task.init {
             let value = await task.value
@@ -55,7 +98,7 @@ extension NodeNonFailableAsync {
     }
 }
 
-extension NodeFailableAsync where Stage == CompletelyCaught {
+extension Finalizable where Self: IsPromise {
     
     @discardableResult
     public func finally(_ body: @escaping () -> ()) -> FinalizedPromise<T> {
@@ -64,6 +107,11 @@ extension NodeFailableAsync where Stage == CompletelyCaught {
             body()
             return try result.get()
         })
+    }
+    
+    @discardableResult
+    public func finallyEscaping(_ body: @escaping () -> ()) -> FinalizedPromise<T> {
+        return finally(body)
     }
     
     @discardableResult
