@@ -60,6 +60,7 @@ extension Result: Recoverable {
     }
 
     // GENERATED
+    // Generated from recover (func recover => func recoverEscaping, body: => body: @escaping)
     public func recoverEscaping(_ body: @escaping (Error) -> T) -> Value<T> {
         switch result {
         case .success(let value):
@@ -69,6 +70,7 @@ extension Result: Recoverable {
         }
     }
     
+    // Generated from recoverThrows (func recover => func recoverEscaping, body: => body: @escaping)
     public func recoverEscaping(_ body: @escaping (Error) throws -> T) -> Self {
         switch result {
         case .success(let value):

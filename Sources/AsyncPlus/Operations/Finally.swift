@@ -33,6 +33,7 @@ extension ChainableValue: Finalizable {
     }
 
     // GENERATED
+    // Generated from finally (func finally => func finallyEscaping, body: => body: @escaping)
     @discardableResult
     public func finallyEscaping(_ body: @escaping () -> ()) -> FinalizedValue<T> {
         body()
@@ -62,6 +63,7 @@ extension CaughtResult: Finalizable {
     }
 
     // GENERATED
+    // Generated from finally (func finally => func finallyEscaping, body: => body: @escaping)
     @discardableResult
     public func finallyEscaping(_ body: @escaping () -> ()) -> FinalizedResult<T> {
         body()

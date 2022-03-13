@@ -64,6 +64,7 @@ extension ChainableResult: Catchable where T == () {
     }
     
     // GENERATED
+    // Generated from catch (func `catch` => func catchEscaping, makeEscaping)
     @discardableResult
     public func catchEscaping(_ body: @escaping (Error) -> ()) -> CaughtResult<T> {
         if case .failure(let error) = result {
@@ -72,6 +73,7 @@ extension ChainableResult: Catchable where T == () {
         return CaughtResult(result)
     }
     
+    // Generated from catchThrows (func `catch` => func catchEscaping, makeEscaping)
     public func catchEscaping(_ body: @escaping (Error) throws -> ()) -> PartiallyCaughtResult<T> {
         do {
             if case .failure(let error) = result {

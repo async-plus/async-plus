@@ -157,7 +157,11 @@ final class CodeGen: XCTestCase {
                 bodyWithSubs = newBodyWithSubs
             }
             previousRules = rulesCopy
-            codeGenStrs.append(bodyWithSubs)
+            let toAppend = """
+                // Generated from \(patternName) (\(substitutionRules))
+            \(bodyWithSubs)
+            """
+            codeGenStrs.append(toAppend)
         }
         
         // Output with codegen
