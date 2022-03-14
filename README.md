@@ -1,4 +1,4 @@
-<a href="https://discord.gg/vaAhGvvHpW">![async+](images/github-heading.png)</a>
+<a href="https://discord.gg/vaAhGvvHpW">![async+](Images/heading.png)</a>
 
 <p align="center">
   <a href="https://docs.asyncplus.codes"><img src="https://img.shields.io/badge/read%20the-docs-blue" alt="Documentation"></a>
