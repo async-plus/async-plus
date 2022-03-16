@@ -17,7 +17,6 @@ Async+ for Swift provides a simple **chainable interface** for your async and th
 Basic chaining operations are:
 
 * `.then` arranges blocks one after another, passing along any values
-
 * `.recover` recovers from a thrown error with a backup value (or block to run)
 * `.catch` catches any errors (and allows you to throw new ones for later catch blocks)
 * `attempt { ... }` kicks off a chain as in the example below:
@@ -57,7 +56,7 @@ For comparison, if we tried to write the above flow without Async+ we'd get some
   }
   ```
 
-Async+ allows async and/or throwing code to remain unnested, modular, and concise.  For a full list of operations see the [documentation](https://docs.asyncplus.codes/index/).
+Async+ allows async and/or throwing code to remain unnested, modular, and concise.  For a full list of operations see the [documentation](https://docs.asyncplus.codes).
 
 Want to still use chained code within a `do`/`catch` block, `Task.init`, or similar context? Easy: chains are fully interoperable with async and/or throwing contexts via the operations `.async()`, and `.asyncThrows()` at the end of the chain, for example:
 
