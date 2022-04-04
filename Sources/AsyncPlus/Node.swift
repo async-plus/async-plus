@@ -1,5 +1,4 @@
 import Foundation
-import AppKit
 
 public protocol Node {
     associatedtype T
