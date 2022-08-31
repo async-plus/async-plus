@@ -38,5 +38,6 @@ let package = Package(
             dependencies: [],
             exclude: ["README.md"]
         )
-    ]
+    ],
+    swiftLanguageVersions: [.v5]
 )

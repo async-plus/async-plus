@@ -68,17 +68,27 @@ If the chain doesn't throw you will not be able to call `asyncThrows` on it (it 
 
 ### 💾  Installation
 
-Install the Async+ **SwiftPM** package in Xcode by going to `<your project> -> <ProjectName> -> Package Dependencies -> "+"` and entering: `https://github.com/async-plus/async-plus.git`
+Async+ can be installed with either SwiftPM or CocoaPods.
+
+For **SwiftPM**, in Xcode go to `<your project> -> <ProjectName> -> Package Dependencies -> "+"` and enter: `https://github.com/async-plus/async-plus.git`
 
 Or modify your `Package.swift` file:
 
 ```swift
 dependencies: [
-    .Package(url: "https://github.com/async-plus/async-plus.git", majorVersion: 0, minor: 1),
+    .Package(url: "https://github.com/async-plus/async-plus.git", majorVersion: 1, minor: 1),
 ] 
 ```
 
-To use Async+ in a Swift file you must add `import AsyncPlus` to the top of the file.
+For **CocoaPods**, in your [Podfile](https://guides.cocoapods.org/syntax/podfile.html):
+
+```
+target "Change Me!" do
+  pod "AsyncPlus", "~> 1.1"
+end
+```
+
+To use Async+ in a Swift file you must `import AsyncPlus` at the top of the file.
 
 ###  📘  Documentation
 
