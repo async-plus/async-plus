@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'AsyncPlus'
-  s.version          = '1.0.2'
+  s.version          = '1.1.1'
   s.summary          = 'A simple chainable interface for your async and throwing code, similar to promises and futures.'
   s.homepage         = 'https://asyncplus.codes/'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
