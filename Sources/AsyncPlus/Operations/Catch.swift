@@ -2,7 +2,7 @@ import Foundation
 
 // Note: Catch operations with bodies that are non-throwing are marked with @discardableResult, because all errors are presumably handled. However, if a catch has a throwing body, then an error could still arise. This can be handled with a call to .throws() to propagate the error, or chained with another `catch` operation with a non-throwing body.
 
-public protocol Catchable: Ensurable where T == () {
+public protocol Catchable: Ensurable {
     
     associatedtype SelfCaught: CompletelyCaught, Catchable
     associatedtype SelfPartiallyCaught: PartiallyCaught, Catchable
@@ -18,11 +18,11 @@ public protocol Catchable: Ensurable where T == () {
     func `catch`(_ body: @escaping (Error) async throws -> ()) -> PartiallyCaughtPromise<T>
 }
 
-extension Catchable where Self: IsResult, T == () {
+extension Catchable where Self: IsResult {
     
     // pattern:catch
     @discardableResult
-    public func `catch`(_ body: (Error) -> ()) -> CaughtResult<T> {
+	public func `catch`(_ body: @escaping (Error) -> ()) -> CaughtResult<T> {
         if case .failure(let error) = result {
             body(error)
         }
@@ -33,7 +33,7 @@ extension Catchable where Self: IsResult, T == () {
     // generate:catch(func `catch` => func catchEscaping, makeEscaping)
 
     // pattern:catchThrows
-    public func `catch`(_ body: (Error) throws -> ()) -> PartiallyCaughtResult<T> {
+	public func `catch`(_ body: @escaping (Error) throws -> ()) -> PartiallyCaughtResult<T> {
         do {
             if case .failure(let error) = result {
                 try body(error)
@@ -89,12 +89,12 @@ extension ChainableResult {
     public typealias SelfPartiallyCaught = PartiallyCaughtResult<T>
 }
 
-extension Result: Catchable where T == () {}
-extension PartiallyCaughtResult: Catchable where T == () {}
-extension CaughtResult: Catchable where T == () {}
+extension Result: Catchable {}
+extension PartiallyCaughtResult: Catchable {}
+extension CaughtResult: Catchable {}
 
 
-extension Catchable where Self: IsPromise, T == () {
+extension Catchable where Self: IsPromise {
 
     @discardableResult
     public func `catch`(_ body: @escaping (Error) -> ()) -> CaughtPromise<T> {
@@ -149,9 +149,9 @@ extension ChainablePromise {
     public typealias SelfPartiallyCaught = PartiallyCaughtPromise<T>
 }
 
-extension Promise: Catchable where T == () {}
-extension PartiallyCaughtPromise: Catchable where T == () {}
-extension CaughtPromise: Catchable where T == () {}
+extension Promise: Catchable {}
+extension PartiallyCaughtPromise: Catchable {}
+extension CaughtPromise: Catchable {}
 
 private func catchAsyncBody<T>(_ body: @escaping (Error) async -> (), result: SimpleResult<T>) async throws -> T {
     switch result {
