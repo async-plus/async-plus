@@ -219,4 +219,24 @@ final class AsyncPlusTests: XCTestCase {
 
         waitForExpectations(timeout: 4, handler: nil)
     }
+
+    func testGetAccessors() async throws {
+        let value: Value<Int> = attempt { () -> Int in 1 }
+        let result: Result<Int> = attempt { () throws -> Int in 2 }
+        let guarantee: Guarantee<Int> = attempt { () async -> Int in 3 }
+        let promise: Promise<Int> = attempt { () async throws -> Int in 4 }
+        let failingResult: Result<Int> = attempt {
+            () throws -> Int in
+            throw MockError.noInternet
+        }
+
+        let guaranteeValue = await guarantee.get()
+        let promiseValue = try await promise.get()
+
+        XCTAssertEqual(value.get(), 1)
+        XCTAssertEqual(try result.get(), 2)
+        XCTAssertEqual(guaranteeValue, 3)
+        XCTAssertEqual(promiseValue, 4)
+        XCTAssertThrowsError(try failingResult.get())
+    }
 }
