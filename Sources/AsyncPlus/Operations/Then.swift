@@ -338,6 +338,133 @@ extension Result: Thenable {
     // END GENERATED
 }
 
+extension Thenable where Self: IsResult {
+
+    public func then<U>(_ body: (T) -> U) -> Result<U> {
+        switch result {
+        case .success(let value):
+            return Result<U>(.success(body(value)))
+        case .failure(let error):
+            return Result<U>(.failure(error))
+        }
+    }
+
+    public func thenEscaping<U>(_ body: @escaping (T) -> U) -> Result<U> {
+        return then(body)
+    }
+
+    public func then(_ body: (T) -> ()) -> Result<T> {
+        switch result {
+        case .success(let value):
+            body(value)
+            return Result<T>(.success(value))
+        case .failure(let error):
+            return Result<T>(.failure(error))
+        }
+    }
+
+    public func thenEscaping(_ body: @escaping (T) -> ()) -> Self {
+        switch result {
+        case .success(let value):
+            body(value)
+            return Self(.success(value))
+        case .failure(let error):
+            return Self(.failure(error))
+        }
+    }
+
+    public func then<U>(_ body: (T) throws -> U) -> Result<U> {
+        switch result {
+        case .success(let value):
+            do {
+                return Result<U>(.success(try body(value)))
+            } catch {
+                return Result<U>(.failure(error))
+            }
+        case .failure(let error):
+            return Result<U>(.failure(error))
+        }
+    }
+
+    public func thenEscaping<U>(_ body: @escaping (T) throws -> U) -> Result<U> {
+        return then(body)
+    }
+
+    public func then(_ body: (T) throws -> ()) -> Result<T> {
+        switch result {
+        case .success(let value):
+            do {
+                try body(value)
+                return Result<T>(.success(value))
+            } catch {
+                return Result<T>(.failure(error))
+            }
+        case .failure(let error):
+            return Result<T>(.failure(error))
+        }
+    }
+
+    public func thenEscaping(_ body: @escaping (T) throws -> ()) -> Result<T> {
+        return then(body)
+    }
+
+    public func then<U>(_ body: @escaping (T) async -> U) -> Promise<U> {
+        return Promise<U>(Task.init {
+            switch result {
+            case .success(let value):
+                return await body(value)
+            case .failure(let error):
+                throw error
+            }
+        })
+    }
+
+    public func then(_ body: @escaping (T) async -> ()) -> SelfAsync where SelfAsync: IsPromise {
+        return SelfAsync(Task.init {
+            switch result {
+            case .success(let value):
+                await body(value)
+                return value
+            case .failure(let error):
+                throw error
+            }
+        })
+    }
+
+    public func then<U>(_ body: @escaping (T) async throws -> U) -> Promise<U> {
+        return Promise<U>(Task.init {
+            switch result {
+            case .success(let value):
+                return try await body(value)
+            case .failure(let error):
+                throw error
+            }
+        })
+    }
+
+    public func then(_ body: @escaping (T) async throws -> ()) -> Promise<T> {
+        return Promise<T>(Task.init {
+            switch result {
+            case .success(let value):
+                try await body(value)
+                return value
+            case .failure(let error):
+                throw error
+            }
+        })
+    }
+}
+
+extension CaughtResult: Thenable {
+
+    public typealias SelfFailable = Result<T>
+}
+
+extension PartiallyCaughtResult: Thenable {
+
+    public typealias SelfFailable = Result<T>
+}
+
 // This ruleset just throws away the body of the function and makes it pass through to then(body)
 
 // ruleset:makeThenEscapingAlias(func then => func thenEscaping, \{(?:.|\n)+\} R=> { return then(body) })
@@ -556,4 +683,93 @@ extension Promise: Thenable {
         })
     }
     // END GENERATED
+}
+
+extension Thenable where Self: IsPromise {
+
+    public func then<U>(_ body: @escaping (T) -> U) -> Promise<U> {
+        return Promise<U>(Task.init {
+            return body(try await task.value)
+        })
+    }
+
+    public func thenEscaping<U>(_ body: @escaping (T) -> U) -> Promise<U> {
+        return then(body)
+    }
+
+    public func then(_ body: @escaping (T) -> ()) -> Promise<T> {
+        return Promise<T>(Task.init {
+            let value = try await task.value
+            body(value)
+            return value
+        })
+    }
+
+    public func thenEscaping(_ body: @escaping (T) -> ()) -> Self {
+        return Self(Task.init {
+            let value = try await task.value
+            body(value)
+            return value
+        })
+    }
+
+    public func then<U>(_ body: @escaping (T) throws -> U) -> Promise<U> {
+        return Promise<U>(Task.init {
+            return try body(try await task.value)
+        })
+    }
+
+    public func thenEscaping<U>(_ body: @escaping (T) throws -> U) -> Promise<U> {
+        return then(body)
+    }
+
+    public func then(_ body: @escaping (T) throws -> ()) -> Promise<T> {
+        return Promise<T>(Task.init {
+            let value = try await task.value
+            try body(value)
+            return value
+        })
+    }
+
+    public func thenEscaping(_ body: @escaping (T) throws -> ()) -> Promise<T> {
+        return then(body)
+    }
+
+    public func then<U>(_ body: @escaping (T) async -> U) -> Promise<U> {
+        return Promise<U>(Task.init {
+            return await body(try await task.value)
+        })
+    }
+
+    public func then(_ body: @escaping (T) async -> ()) -> SelfAsync where SelfAsync: IsPromise {
+        return SelfAsync(Task.init {
+            let value = try await task.value
+            await body(value)
+            return value
+        })
+    }
+
+    public func then<U>(_ body: @escaping (T) async throws -> U) -> Promise<U> {
+        return Promise<U>(Task.init {
+            return try await body(try await task.value)
+        })
+    }
+
+    public func then(_ body: @escaping (T) async throws -> ()) -> Promise<T> {
+        return Promise<T>(Task.init {
+            let value = try await task.value
+            try await body(value)
+            return value
+        })
+    }
+}
+
+extension CaughtPromise: Thenable {
+
+    public typealias SelfFailable = Promise<T>
+}
+
+extension PartiallyCaughtPromise: Thenable {
+
+    public typealias SelfFailable = Promise<T>
 }
