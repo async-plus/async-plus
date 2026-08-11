@@ -22,7 +22,7 @@ extension Catchable where Self: IsResult {
     
     // pattern:catch
     @discardableResult
-	public func `catch`(_ body: @escaping (Error) -> ()) -> CaughtResult<T> {
+	public func `catch`(_ body: (Error) -> ()) -> CaughtResult<T> {
         if case .failure(let error) = result {
             body(error)
         }
@@ -33,7 +33,7 @@ extension Catchable where Self: IsResult {
     // generate:catch(func `catch` => func catchEscaping, makeEscaping)
 
     // pattern:catchThrows
-	public func `catch`(_ body: @escaping (Error) throws -> ()) -> PartiallyCaughtResult<T> {
+	public func `catch`(_ body: (Error) throws -> ()) -> PartiallyCaughtResult<T> {
         do {
             if case .failure(let error) = result {
                 try body(error)
@@ -63,7 +63,7 @@ extension Catchable where Self: IsResult {
     // GENERATED
     // Generated from catch
     @discardableResult
-    public func catchEscaping(_ body: @escaping (Error) -> ()) -> CaughtResult<T> {
+	public func catchEscaping(_ body: @escaping (Error) -> ()) -> CaughtResult<T> {
         if case .failure(let error) = result {
             body(error)
         }
@@ -71,7 +71,7 @@ extension Catchable where Self: IsResult {
     }
     
     // Generated from catchThrows
-    public func catchEscaping(_ body: @escaping (Error) throws -> ()) -> PartiallyCaughtResult<T> {
+	public func catchEscaping(_ body: @escaping (Error) throws -> ()) -> PartiallyCaughtResult<T> {
         do {
             if case .failure(let error) = result {
                 try body(error)

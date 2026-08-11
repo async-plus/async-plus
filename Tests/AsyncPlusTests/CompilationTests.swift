@@ -56,3 +56,32 @@ func test() {
     }
 }
 
+func issue16CatchAfterReturningThen() {
+    attempt {
+        () -> Int in
+        try await mockSleepThrowing(seconds: 1)
+        return 32
+    }.then {
+        (num: Int) -> Int in
+        print(num)
+        return 5
+    }.catch {
+        err in
+        print(err)
+    }
+}
+
+func issue17ThenAfterCatch() {
+    attempt {
+        return 0
+    }.catch {
+        err in
+        print(err)
+    }.then {
+        value in
+        print(value)
+    }.catch {
+        err in
+        print(err)
+    }
+}
