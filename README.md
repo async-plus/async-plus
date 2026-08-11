@@ -58,13 +58,14 @@ For comparison, if we tried to write the above flow without Async+ we'd get some
 
 Async+ allows async and/or throwing code to remain unnested, modular, and concise.  For a full list of operations see the [documentation](https://docs.asyncplus.codes).
 
-Want to still use chained code within a `do`/`catch` block, `Task.init`, or similar context? Easy: chains are fully interoperable with async and/or throwing contexts via the operations `.async()`, and `.asyncThrows()` at the end of the chain, for example:
+Want to still use chained code within a `do`/`catch` block, `Task.init`, or similar context? Easy: chains are fully interoperable with async and/or throwing contexts via the operation `.get()` at the end of the chain, for example:
 
 ```
-let foo = await attempt{ ... }.then{ ... }.async() // non-throwing chain
-let foo = try await attempt{ ... }.then{ ... }.asyncThrows() // throwing chain
+let foo = await attempt{ ... }.then{ ... }.get() // async non-throwing chain
+let foo = try await attempt{ ... }.then{ ... }.get() // async throwing chain
+let foo = try attempt{ ... }.then{ ... }.get() // synchronous throwing chain
 ```
-If the chain doesn't throw you will not be able to call `asyncThrows` on it (it is a `Guarantee<T>` type rather than a `Promise<T>` type), and vice versa.  Similarly, chains with potential for uncaught errors will raise an unused value warning at compilation time.
+The call is async and/or throwing based on the chain type. The older `.async()` and `.asyncThrows()` accessors remain available for async chains. Similarly, chains with potential for uncaught errors will raise an unused value warning at compilation time.
 
 ### 💾  Installation
 
@@ -111,4 +112,3 @@ To use Async+ in a Swift file you must `import AsyncPlus` at the top of the file
 This package is in its initial release: please provide feedback and suggestions in order to help shape the API, either by submitting an [issue](https://github.com/async-plus/async-plus/issues/new) on Github or sending a message on [Discord](https://discord.gg/vaAhGvvHpW).
 
 Special thanks to the developers of PromiseKit and [mxcl](https://github.com/mxcl) for inspiring this work and promoting its development.
-

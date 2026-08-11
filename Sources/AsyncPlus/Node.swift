@@ -25,13 +25,12 @@ public protocol IsResult: Failable, Instant {
 }
 
 extension IsResult {
+    public func get() throws -> T {
+        return try result.get()
+    }
+
     public func `throws`() throws -> T {
-        switch result {
-        case .success(let value):
-            return value
-        case .failure(let error):
-            throw error
-        }
+        return try get()
     }
 
     public func optional() -> T? {
@@ -44,14 +43,24 @@ extension IsResult {
     }
 }
 
+extension IsValue {
+    public func get() -> T {
+        return value
+    }
+}
+
 public protocol IsGuarantee: NonFailable, Async {
     var task: NonFailableTask<T> { get }
     init(_ task: NonFailableTask<T>)
 }
 
 extension IsGuarantee {
-    public func async() async -> T {
+    public func get() async -> T {
         return await task.value
+    }
+
+    public func async() async -> T {
+        return await get()
     }
 }
 
@@ -65,8 +74,12 @@ public protocol IsPromise: Failable, Async {
 }
 
 extension IsPromise {
-    public func asyncThrows() async throws -> T {
+    public func get() async throws -> T {
         return try await task.value
+    }
+
+    public func asyncThrows() async throws -> T {
+        return try await get()
     }
 
     public func asyncOptional() async -> T? {
